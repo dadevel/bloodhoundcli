@@ -1,0 +1,1537 @@
+{
+  "queries": [
+    {
+      "name": "Paths from owned to high value targets (5 hops)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a {owned: true})-[*1..5]->(b {highvalue: true})) WHERE NOT a = b RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Paths from owned to high value targets (unlimited)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a {owned: true})-[*1..]->(b {highvalue: true})) WHERE NOT a = b RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "All paths from owned to high value targets (5 hops)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = allShortestPaths((a {owned:true})-[*1..5]->(b {highvalue: true})) WHERE NOT a = b RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "All paths from owned to high value targets (unlimited)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = allShortestPaths((a {owned: true})-[*1..]->(b {highvalue: true})) WHERE NOT a = b RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Next steps from owned (3 hops)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a {owned: true})-[*1..3]->(b)) WHERE NOT a = b RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Next steps from owned (5 hops)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a {owned: true})-[*1..5]->(b)) WHERE NOT a = b RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Simplified paths to domain admins (10 hops)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a {enabled: true})-[r*1..10]->(b:Group)) WHERE b.objectid ENDS WITH '-512' AND a<>b AND (a:User OR a.Computer) AND NONE(rel in r WHERE type(rel)='CanRDP') RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Simplified paths to high value targets (5 hops)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a {enabled: true})-[r*1..5]->(b {highvalue: true})) WHERE a<>b AND (a:User OR a:Computer) AND NONE(rel in r WHERE type(rel)='CanRDP') RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "All high value targets",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(h {highvalue: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "All owned objects",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(h {owned: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Potential admins",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(g:Group)<-[:MemberOf*1..]-(u:User {enabled: true}) WHERE toUpper(g.name) CONTAINS 'ADM' OR toUpper(u.name) CONTAINS 'ADM' RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Members of protected users",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User {enabled: true})-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-525' RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Sessions of all users",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Computer)-[:HasSession]->(:User) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Sessions of high value users",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true})-[:MemberOf*1..]->(g:Group) WHERE u.highvalue OR g.highvalue MATCH p = (:Computer)-[:HasSession]->(u) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Sessions on outdated computers",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u:User {enabled: true})<-[:HasSession]-(c:Computer {enabled: true}) WHERE c.operatingsystem =~ '(?i).*?(2000|2003|2008|xp|vista|7|me).*?' AND NOT c.lastlogon IN [-1.0, 0.0] AND c.lastlogon > (datetime().epochseconds - (90 * 86400)) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Sessions of specific user",
+      "category": "Admin Hunt",
+      "requireNodeSelect": true,
+      "queryList": [
+        {
+          "final": false,
+          "title": "Select user...",
+          "query": "MATCH (u:User {enabled: true}) RETURN u.name ORDER BY u.name"
+        },
+        {
+          "final": true,
+          "query": "MATCH p = (:Computer)-[:HasSession]->(:User {name: $result}) RETURN p",
+          "startNode": "{}",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Enabled certificate templates",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:CertificateTemplate {Enabled: true})-[:EnabledBy]->(:CA) RETURN p UNION MATCH p = shortestPath((o)-[r]->(t:CertificateTemplate {Enabled: true})) WHERE o<>t RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Paths from owned to ADCS (10 hops)",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((o {owned: true})-[*1..10]->(t:CertificateTemplate {Enabled: true})) WHERE o<>t RETURN p UNION MATCH p = shortestPath((o {owned: true})-[r*1..10]->(a:CA)) WHERE o<>a AND NONE(rel IN r WHERE type(rel) IN ['EnabledBy','Read']) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to ESC1 templates excluding DAs",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid ENDS WITH '-512' OR g.objectid ENDS WITH '-519' WITH COLLECT(u) AS x MATCH p = shortestPath((o)-[r]->(t:CertificateTemplate {Enabled: true, `Client Authentication`: true, `Enrollee Supplies Subject`: true, `Requires Manager Approval`: false})) WHERE o<>t AND ((o:User AND o.enabled AND NOT o IN x) OR (o:Computer AND o.enabled) OR (o:Group AND NOT o.objectid ENDS WITH '-512' AND NOT o.objectid ENDS WITH '-519')) AND NONE(rel IN r WHERE type(rel) IN ['EnabledBy','Read','ManageCa','ManageCertificates']) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to ESC2 templates excluding DAs",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid ENDS WITH '-512' OR g.objectid ENDS WITH '-519' WITH COLLECT(u) AS x MATCH p = shortestPath((o)-[r]->(t:CertificateTemplate {Enabled: true, `Any Purpose`: true, `Requires Manager Approval`: false})) WHERE o<>t AND ((o:User AND o.enabled AND NOT o IN x) OR (o:Computer AND o.enabled) OR (o:Group AND NOT o.objectid ENDS WITH '-512' AND NOT o.objectid ENDS WITH '-519')) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to ESC3 templates excluding DAs",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid ENDS WITH '-512' OR g.objectid ENDS WITH '-519' WITH COLLECT(u) AS x MATCH p = shortestPath((o)-[r]->(t:CertificateTemplate {Enabled: true, `Enrollment Agent`: true, `Requires Manager Approval`: false})) WHERE o<>t AND ((o:User AND o.enabled AND NOT o IN x) OR (o:Computer AND o.enabled) OR (o:Group AND NOT o.objectid ENDS WITH '-512' AND NOT o.objectid ENDS WITH '-519')) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to ESC4 templates excluding DAs",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid ENDS WITH '-512' OR g.objectid ENDS WITH '-519' WITH COLLECT(u) AS x MATCH p = shortestPath((o)-[r]->(t:CertificateTemplate {Enabled: true})) WHERE o<>t AND ((o:User AND o.enabled AND NOT o IN x) OR (o:Computer AND o.enabled) OR (o:Group AND NOT o.objectid ENDS WITH '-512' AND NOT o.objectid ENDS WITH '-519')) AND NONE(rel IN r WHERE type(rel) IN ['EnabledBy','Read','ManageCa','ManageCertificates','Enroll','AutoEnroll']) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Certificate authorities with ESC6",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a:CA {`User Specified SAN`: 'Enabled'}) RETURN a"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to ESC7 certificate authorities",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((o)-[r]->(a:CA)) WHERE o<>a AND ((o:User AND o.enabled) OR (o:Computer AND o.enabled) OR o:Group) AND NONE(rel IN r WHERE type(rel) IN ['EnabledBy','Read','Enroll','AutoEnroll']) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Certificate authorities with ESC8",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a:CA {`Web Enrollment`: 'Enabled'}) RETURN a"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to ESC8 templates",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (o)-[:Enroll]->(:CertificateTemplate {Enabled: true,`Client Authentication`:true})-[:EnabledBy]->(:CA {`Web Enrollment`:'Enabled'}) WHERE (o:User OR o:Computer OR o:Group) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to ESC9 templates",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((o)-[r]->(t:CertificateTemplate {Enabled: true, `Client Authentication`: true})) WHERE o<>t AND 'NoSecurityExtension' IN t.`Enrollment Flag` AND NONE(rel IN r WHERE type(rel) IN ['EnabledBy','Read','ManageCa','ManageCertificates']) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Certificate authorities with ESC11",
+      "category": "Escalation - ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a:CA {`Enforce Encryption for Requests`: 'Disabled', `Request Disposition`: 'Issue'}) RETURN a"
+        }
+      ]
+    },
+    {
+      "name": "Groups with admincount that are not high value",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (o {enabled: true})-[:MemberOf*1..]->(g:Group {admincount: true, highvalue: false}) WHERE (o:User OR o:Computer) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Paths from users excluding DAs to high value targets (5 hops)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-512' OR g.objectid ENDS WITH '-519' WITH COLLECT(u) AS x MATCH p = shortestPath((a:User {enabled: true})-[*1..5]->(b {highvalue: true})) WHERE NOT a IN x AND NOT a = b RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Paths from users excluding DAs (3 hops)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-512' OR g.objectid ENDS WITH '-519' WITH COLLECT(u) AS x MATCH p = shortestPath((a:User {enabled: true})-[*1..3]->(b)) WHERE NOT a IN x AND NOT a = b RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Paths from computers excluding DCs to high value targets (5 hops)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Computer)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS x MATCH p = shortestPath((a:Computer {enabled: true})-[r*1..5]->(b {highvalue: true})) WHERE none(rel IN r WHERE rel:Contains OR rel:HasSession) AND NOT a IN x AND NOT a = b RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Paths from computers excluding DCs (3 hops)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Computer)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS x MATCH p = shortestPath((a:Computer {enabled: true})-[r*1..3]->(b)) WHERE none(rel IN r WHERE rel:Contains OR rel:HasSession) AND NOT a IN x AND NOT a = b RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users with local admin rights",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User {enabled: true})-[:AdminTo]->(:Computer {enabled: true}) RETURN p UNION MATCH p = (:User {enabled: true})-[:MemberOf*1..]->(:Group)-[:AdminTo]->(:Computer {enabled: true}) RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Users with local execution rights",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u:User {enabled: true})-[:AdminTo|CanRDP|ExecuteDCOM|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner]->(:Computer {enabled: true}) WHERE NOT EXISTS { MATCH (u)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-519' OR g.objectid ENDS WITH '-512' } RETURN p UNION MATCH p = (:User {enabled: true})-[:MemberOf*1..]->(:Group)-[:AdminTo|CanRDP|ExecuteDCOM|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner]->(:Computer {enabled: true}) WHERE NOT EXISTS { MATCH (u)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-519' OR g.objectid ENDS WITH '-512' } RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Computers with local admin rights",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Computer {enabled: true})-[:AdminTo]->(:Computer {enabled: true}) RETURN p UNION MATCH p = (:Computer {enabled: true})-[:MemberOf*1..]->(:Group)-[:AdminTo]->(:Computer {enabled: true}) RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Users with RDP rights",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User {enabled: true})-[:CanRDP]->(:Computer {enabled: true}) RETURN p UNION MATCH p = (:User {enabled: true})-[:MemberOf*1..]->(g:Group)-[:CanRDP]->(:Computer {enabled: true}) RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Service accounts with paths to computers (10 hops)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((:User {enabled: true, hasspn: true})-[*1..10]->(:Computer {enabled: true})) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Service accounts with paths to users (10 hops)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a:User {enabled: true, hasspn: true})-[*1..10]->(b:User {enabled: true})) WHERE NOT a = b RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "LAPS readers excluding DAs",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User {enabled: true})-[:ReadLAPSPassword|SyncLAPSPassword|GenericAll|AllExtendedRights]->(:Computer {enabled: true, haslaps: true}) RETURN p UNION MATCH p = (:User {enabled: true})-[:MemberOf*1..]->(g:Group)-[:ReadLAPSPassword|SyncLAPSPassword|GenericAll|AllExtendedRights]->(:Computer {enabled: true, haslaps: true}) WHERE NOT g.objectid ENDS WITH '-512' AND NOT g.objectid ENDS WITH '-519' RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "gMSA readers excluding DAs",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User {enabled: true})-[:ReadGMSAPassword]->(:User {enabled: true}) RETURN p UNION MATCH p = (:User {enabled: true})-[:MemberOf*1..]->(g:Group)-[:ReadGMSAPassword]->(:User {enabled: true}) WHERE NOT g.objectid ENDS WITH '-512' AND NOT g.objectid ENDS WITH '-519' RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Objects with DCSync rights",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (o {enabled: true})-[:DCSync|AllExtendedRights|GenericAll]->(:Domain) RETURN p UNION MATCH p = (o {enabled: true})-[:MemberOf*1..]->(:Group)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Objects with DCSync rights excluding DAs and DCs",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (o {enabled: true})-[:DCSync|AllExtendedRights|GenericAll]->(:Domain) WHERE NOT EXISTS { MATCH (o)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-519' OR g.objectid ENDS WITH '-512' OR g.objectid='S-1-5-9' OR g.objectid ENDS WITH '-516' } RETURN p UNION MATCH p = (o {enabled: true})-[:MemberOf*1..]->(:Group)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain) WHERE NOT EXISTS { MATCH (o)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-519' OR g.objectid ENDS WITH '-512' OR g.objectid='S-1-5-9' OR g.objectid ENDS WITH '-516' } RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users that can reset passwords excluding DAs (heavy)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User {enabled: true})-[:ForceChangePassword]->(:User {enabled: true}) RETURN p UNION MATCH p = (:User {enabled: true})-[:MemberOf*1..]->(g:Group)-[:ForceChangePassword]->(:User {enabled: true}) WHERE NOT g.objectid ENDS WITH '-512' AND NOT g.objectid ENDS WITH '-519' RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users that can add members to groups excluding DAs",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User {enabled: true})-[:AddMember]->(:Group) RETURN p UNION MATCH p = (:User {enabled: true})-[:MemberOf*1..]->(g:Group)-[:AddMember]->(:Group) WHERE NOT g.objectid ENDS WITH '-512' AND NOT g.objectid ENDS WITH '-519' RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct ACLs of users",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User)-[r]->(o) WHERE r.isacl RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct ACLs of non-admin users",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u:User)-[r]->(n) WHERE r.isacl AND u.admincount=false AND RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct object ownership",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[:Owns]->(b) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users or computers potentially with password in description",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (x) WHERE (x:User OR x:Computer) AND toUpper(x.description) CONTAINS 'PASSW' OR toUpper(x.description) CONTAINS 'PW:' RETURN x"
+        }
+      ]
+    },
+    {
+      "name": "Users or computers with custom SPNs",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c {enabled: true}) WHERE ANY (x IN c.serviceprincipalnames WHERE NOT toUpper(x) STARTS WITH 'HOST/' AND NOT x STARTS WITH 'WSMAN/' AND NOT x STARTS WITH 'RestrictedKrbHost/' AND NOT x STARTS WITH 'TERMSRV/' AND NOT x STARTS WITH 'DNS/' AND NOT x STARTS WITH 'GC/' AND NOT toUpper(x) STARTS WITH 'LDAP/' AND NOT x STARTS WITH 'MSSQLSvc/' AND NOT x STARTS WITH 'MSServerCluster/' AND NOT x STARTS WITH 'MSClusterVirtualServer/' AND NOT x STARTS WITH 'MSServerClusterMgmtAPI/') RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Groups with local admin rights and without admincount",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (g:Group)-[:AdminTo]->(:Computer) WHERE NOT g.admincount RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Potential pre-created computers",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Computer {enabled: true}) WHERE (c.lastlogon=0 OR c.lastlogon IS NULL) RETURN c"
+        }
+      ]
+    },
+    {
+      "name": "Kerberoastable users",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, hasspn: true}) RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "AS-REP-roastable users",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:User {enabled: true, dontreqpreauth: true}) RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Unconstrained delegations",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->({unconstraineddelegation: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Unconstrained delegations excluding DCs",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c1:Computer)-[:MemberOf*1..]->(g:Group) WHERE g.objectid='S-1-5-9' OR g.objectid ENDS WITH '-516' WITH COLLECT(c1) AS x MATCH p = (:Domain)-[:Contains*1..]->(c2 {unconstraineddelegation: true}) WHERE NOT c2 IN x RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Constrained delegations",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[:AllowedToDelegate]->(b) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Constrained delegations with protocol transition",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(x) WHERE NOT x.allowedtodelegate IS NULL AND x.trustedtoauth=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Constrained delegations without protocol transition",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(x) WHERE NOT x.allowedtodelegate IS NULL AND x.trustedtoauth=false RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Resource-based constrained delegations",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[:AllowedToAct|AddAllowedToAct]->(b) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Linux servers potentially vulnerable to account name spoofing",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT toLower(c.operatingsystem) CONTAINS 'windows' AND NOT toLower(c.operatingsystem) CONTAINS 'mac os' AND NOT toLower(c.operatingsystem) CONTAINS 'macos' RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "All GPOs",
+      "category": "GPOs",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:GPO)-[:GPLink]->(:OU)<-[:Contains*1..]-(:Domain) RETURN p UNION MATCH p = (:GPO)-[:GPLink]->(:Domain) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Objects with direct paths against GPOs excluding DAs (heavy)",
+      "category": "GPOs",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-512' OR g.objectid ENDS WITH '-519' WITH COLLECT([u, g]) AS x MATCH p = shortestPath((a)-[]->(b:GPO)) WHERE NOT (a:User AND a IN x[0]) AND NOT (a:Group AND a in x[1]) AND NOT a = b RETURN p" 
+        }
+      ]
+    },
+    {
+      "name": "MSSQL servers",
+      "category": "MSSQL",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c {enabled: true}) WHERE ANY (x IN c.serviceprincipalnames WHERE x STARTS WITH 'MSSQLSvc/' OR x STARTS WITH 'MSServerCluster/' OR x STARTS WITH 'MSClusterVirtualServer/' OR x STARTS WITH 'MSServerClusterMgmtAPI/') RETURN p UNION MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true})<-[:SQLAdmin]-(:User {enabled: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "MSSQL admins",
+      "category": "MSSQL",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:User {enabled: true})-[:SQLAdmin]->(:Computer {enabled: true}) return p"
+        }
+      ]
+    },
+    {
+      "name": "Map domains, groups and users",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:Group)<-[:MemberOf]-(:User) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users that are member of a foreign group",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u:User)-[:MemberOf*1..]->(g:Group) WHERE NOT u.domain = g.domain RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users with same name in different domain",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u1:User), (u2:User) WHERE split(u1.name,'@')[0] = split(u2.name,'@')[0] AND NOT u1.domain = u2.domain AND toInteger(split(u1.objectid,'-')[7]) >= 1000 RETURN u1"
+        }
+      ]
+    },
+    {
+      "name": "Objects in one domain that can do something to a foreign object",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((n)-[r]->(m)) WHERE NOT n.domain = m.domain RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct cross-domain object ownership",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[:Owns]->(b) WHERE a.domainsid<>b.domainsid RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct cross-domain ACLs",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[r]->(b) WHERE r.isacl AND a.domainsid<>b.domainsid RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Paths from objects in owned domains to other domains",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain {owned: true})-[:Contains*1..]->(a)-[r]->(b)<-[Contains*1..]-(:Domain {owned: false}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users that never logged on",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE u.lastlogontimestamp IN [-1.0, 0.0] RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users with last logon over 90 days ago",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE NOT u.lastlogon IN [-1.0, 0.0] AND u.lastlogon < (datetime().epochseconds - (90 * 86400)) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users that never set a password",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE u.pwdlastset IN [-1.0, 0.0] RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users with password older than a year",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE NOT u.pwdlastset IN [-1.0, 0.0] AND u.pwdlastset < (datetime().epochseconds - (365 * 86400)) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users with password change after last logon",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE (u.lastlogon > 0 AND u.lastlogon >= u.lastlogontimestamp AND u.pwdlastset > u.lastlogon) OR (u.lastlogontimestamp > 0 AND u.lastlogontimestamp >= u.lastlogon AND u.pwdlastset > u.lastlogontimestamp) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users with password not required",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:User {enabled: true, passwordnotreqd: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users with never expiring passwords",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:User {enabled: true, pwdneverexpires: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users without logon since 90 days",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE NOT u.lastlogon IN [-1.0, 0.0] AND u.lastlogon < (datetime().epochseconds - (90 * 60 * 60 * 24)) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled members of dangerous groups",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u:User {enabled: true})-[:MemberOf*1..]->(g:Group) WHERE g.name~='(?i)(ACCOUNT OPERATORS|SERVER OPERATORS|SCHEMA ADMINS)@' RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct members of pre-windows 2000 compatible access group",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (o)-[:MemberOf]->(g:Group) WHERE g.name STARTS WITH 'PRE-WINDOWS 2000 COMPATIBLE ACCESS@' RETURN DISTINCT p"
+        }
+      ]
+    },
+    {
+      "name": "High value users that are not protected (5 hops)",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true})-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-525' WITH COLLECT(u) AS x MATCH p = (u:User {enabled: true})-[:MemberOf*1..5]->(g:Group) WHERE (u.highvalue OR g.highvalue) AND NOT u IN x RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Disabled users",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:User {enabled: false}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tier 0 users with never expiring passwords",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier0: true, pwdneverexpires: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tier 0 users without password change since a year",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier0: true}) WHERE datetime().epochseconds - u.pwdlastset > 60*60*24*365 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Active computers with outdated OS",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE c.operatingsystem =~ '(?i).*?(2000|2003|2008|xp|vista|7|me).*?' AND NOT c.lastlogon IN [-1.0, 0.0] AND c.lastlogon > (datetime().epochseconds - (90 * 86400)) RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Servers with current OS",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE c.operatingsystem =~ '^(?i)Windows Server (2012|2016|2019|2022).*?' RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Clients with current OS",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE c.operatingsystem =~ '^(?i)Windows (10|11).*?' RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Computers without Windows OS",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT c.operatingsystem CONTAINS 'Windows' RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Computers without LAPS",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[r:Contains*1..]->(c:Computer {enabled: true, haslaps: false}) WHERE toUpper(c.operatingsystem) CONTAINS 'WINDOWS' RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Computers with LAPS",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[r:Contains*1..]->(c:Computer {enabled: true, haslaps: true}) RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Enabled computers without logon",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE c.lastlogon IN [-1.0, 0.0] RETURN p",
+          "allowCollapse": false
+        }
+      ]
+    },
+    {
+      "name": "Enabled computers without logon since 90 days",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT c.lastlogon IN [-1.0, 0.0] AND c.lastlogon < (datetime().epochseconds - (90 * 60 * 60 * 24)) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Disabled computers",
+      "category": "Computers",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: false})"
+        }
+      ]
+    },
+    {
+      "name": "Connect uses with shared passwords",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a:User) MATCH (b:User) WHERE a<>b AND NOT a.nthash IS NULL AND a.nthash=b.nthash MERGE (a)-[:SharesPasswordWith]-(b)"
+        }
+      ]
+    },
+    {
+      "name": "Paths from kerberoasted users (3 hops)",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a:User {enabled: true, hasspn: true, cracked: true})-[*1..3]->(b)) WHERE a<>b RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tier 0 users with cracked password",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u:User {enabled: true, cracked: true})-[:MemberOf]->(g:Group) WHERE u.tier0 OR g.tier0 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Valuable users with cracked password",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u:User {enabled: true, cracked: true})-[:MemberOf]->(g:Group) WHERE u.highvalue OR g.highvalue RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tier 0 users with shared password",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a:User {enabled: true})-[:SharesPasswordWith]->(b: User {enabled: true, tier0: true}) WHERE a.tier0 IS NULL OR a.tier0=false RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Valueable users with shared password",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a:User {enabled: true})-[:SharesPasswordWith]->(b: User {enabled: true, highvalue: true}) WHERE a.highvalue IS NULL OR a.highvalue=false RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users where password equals username",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true}) WHERE toLower(u.samaccountname)=toLower(u.password) SET u.weakpassword=true RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Users with empty password",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true, nthash: '31d6cfe0d16ae931b73c59d7e0c089c0'}) SET u.weakpassword=true RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Users with passwords up to 4 chars",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true}) WHERE size(u.password) <= 4 SET u.weakpassword=true RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Users with passwords up to 8 chars",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true}) WHERE size(u.password) <= 8 SET u.weakpassword=true RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Users with password in description",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true}) WHERE u.password IS NOT NULL AND u.description CONTAINS u.password RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Pre-created Computers",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Computer {enabled: true}) WHERE (c.lastlogon=0 OR c.lastlogon IS NULL) AND c.password=toLower(left(replace(c.samaccountname, '$', ''), 14)) SET c.weakpassword=true RETURN c"
+        }
+      ]
+    },
+    {
+      "name": "Mark Tier 0 groups",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": false,
+          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 525, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) SET x.highvalue=true, x.tier0=true"
+        },
+        {
+          "final": false,
+          "query": "MATCH (x:Group) WHERE any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true, x.tier0=true"
+        },
+        {
+          "final": true,
+          "query": "MATCH (x:Group) WHERE any(y IN ['DnsAdmins'] WHERE x.name STARTS WITH toUpper(y + '@')) SET x.highvalue=true, x.tier0=true"
+        }
+      ]
+    },
+    {
+      "name": "Mark members of Tier 0 groups (3 hops)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..3]->(y:Group {tier0: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true, x.tier0=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark members of Tier 0 groups (10 hops)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..10]->(y:Group {tier0: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true, x.tier0=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark members of Tier 0 groups (unlimited)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..]->(y:Group {tier0: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true, x.tier0=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark members of valueable groups (3 hops)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..3]->(y:Group {highvalue: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark members of valueable groups (10 hops)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..10]->(y:Group {highvalue: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark members of valueable 0 groups (unlimited)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..]->(y:Group {highvalue: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark OUs containing Tier 0 objects",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x:OU)-[:Contains*1..]->(y {tier0: true}) WHERE (y:OU OR y:Group OR y:User OR y:Computer) SET x.highvalue=true, x.tier0=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark OUs containing valueable objects",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x:OU)-[:Contains*1..]->(y {highvalue: true}) WHERE (y:OU OR y:Group OR y:User OR y:Computer) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark objects with unconstrained delegation",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (o {enabled:true, unconstraineddelegation:true}) SET o.highvalue=true RETURN o"
+        }
+      ]
+    },
+    {
+      "name": "Mark computers with sessions of valuable users",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x:Computer)-[:HasSession]->(y:User {highvalue: true}) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark objects in direct control of valuable objects",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((x)-[]->(y {highvalue: true})) WHERE x<>y SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark users and computers in control of valuable objects (3 hops)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((x)-[*1..3]->(y {highvalue: true})) WHERE x<>y AND (x:User OR x:Computer) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark users and computers in control of valuable objects (5 hops)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((x)-[*1..5]->(y {highvalue: true})) WHERE x<>Y AND (x:User OR x:Computer) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Show Tier 0",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(y {tier0: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Show valuable objects",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(y {highvalue: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Show users and computers violating Tier 0",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((x)-[*1..10]->(y:Domain)) WHERE x<>y AND (x:User OR x:Computer) AND (x.tier0=false OR x.tier0 IS NULL) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users in privileged roles",
+      "category": "Azure - General",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u)-[:AZHasRole|AZMemberOf*1..]->(r:AZRole) WHERE r.displayname =~ '(?i)Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator' RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Users in privileged roles synced from on-prem",
+      "category": "Azure - General",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u {onpremisesyncenabled: true})-[:AZHasRole|AZMemberOf*1..]->(r:AZRole) WHERE r.displayname =~ '(?i)Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator' RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users synced from on-prem",
+      "category": "Azure - General",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u {onpremisesyncenabled: true}) RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Groups synced from on-prem",
+      "category": "Azure - General",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (g:AZGroup {onpremsyncenabled: true}) RETURN g"
+        }
+      ]
+    },
+    {
+      "name": "Owners of applications",
+      "category": "Azure - General",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (n)-[:AZOwns]->(:AZApp) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users related to AAD Connect",
+      "category": "Azure - General",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true}) WHERE toUpper(u.name) STARTS WITH 'MSOL_' RETURN u UNION MATCH (u:AZUser) WHERE toUpper(u.userprincipalname) STARTS WITH 'SYNC_' RETURN u",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Owners of subscriptions",
+      "category": "Azure - General",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (n)-[:AZOwns|AZUserAccessAdministrator]->(:AZSubscription) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Principals without Azure role but with RBAC role User Access Administrator",
+      "category": "Azure - General",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u) WHERE NOT EXISTS((u)-[:AZMemberOf|AZHasRole*1..]->(:AZRole)) AND EXISTS((u)-[:AZUserAccessAdministrator]->()) RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Paths from users to high value targets",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((u:AZUser)-[r*1..]->(n {highvalue:true})) WHERE NONE (r IN relationships(p) WHERE type(r)= 'GetChanges') AND NONE (r in relationships(p) WHERE type(r) = 'GetChangesAll') AND NOT u = n RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Paths from users synced from on-prem to high value targets",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((u:AZUser {onpremisesyncenabled: true})-[r*1..]->(n {highvalue: true})) WHERE NONE (r IN relationships(p) WHERE type(r) = 'GetChanges') AND NONE (r in relationships(p) WHERE type(r) = 'GetChangesAll') AND NOT u = n RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Paths to high value roles",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((m)-[*1..]->(n:AZRole)) WHERE n.displayname =~ '(?i)Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator' AND NOT m = n RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Paths from applications to high value targets",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((m:AZApp)-[r*1..]->(n {highvalue:true})) WHERE NONE (r IN relationships(p) WHERE type(r) = 'GetChanges') AND NONE (r in relationships(p) WHERE type(r) = 'GetChangesAll') AND NOT m = n RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to VMs",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (n)-[r]->(:AZVM) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to Key Vaults",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (n)-[r]->(:AZKeyVault) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Paths to subscriptions",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((m)-[*1..]->(n:AZSubscription)) WHERE NOT m = n RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Paths from principals without an Azure role but the RBAC role User Access Administrator to resources",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u)-[:AZUserAccessAdministrator]->(t) WHERE NOT EXISTS((u)-[:AZMemberOf|AZHasRole*1..]->(:AZRole)) RETURN u, p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Service principals with MS Graph app role assignments",
+      "category": "Azure - MS Graph",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p=(m:AZServicePrincipal)-[r:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All]->(n:AZServicePrincipal) RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Direct controllers of MS Graph",
+      "category": "Azure - MS Graph",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (n)-[r:AZAddOwner|AZAddSecret|AZAppAdmin|AZCloudAppAdmin|AZMGAddOwner|AZMGAddSecret|AZOwns]->(g:AZServicePrincipal {appdisplayname: \"Microsoft Graph\"}) RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Shortest path to MS Graph",
+      "category": "Azure - MS Graph",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (n) WHERE NOT n.displayname='Microsoft Graph' WITH n MATCH p = shortestPath((n)-[r*1..]->(g:AZServicePrincipal {appdisplayname: 'Microsoft Graph'})) WHERE n<>g RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Shortest path from owned users to service principals",
+      "category": "Azure - Managed Identity",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:AZUser {owned: true}), (m:AZServicePrincipal) MATCH p = shortestPath((u)-[*..]->(m)) RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Shortest path from owned users to managed identities",
+      "category": "Azure - Managed Identity",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:AZUser {owned: true}), (m:AZServicePrincipal {serviceprincipaltype: 'ManagedIdentity'}) MATCH p = shortestPath((u)-[*..]->(m)) RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "Shortest path from all users to managed identities",
+      "category": "Azure - Managed Identity",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:AZUser), (m:AZServicePrincipal {serviceprincipaltype: 'ManagedIdentity'}) MATCH p = shortestPath((u)-[*..]->(m)) RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "All service principals",
+      "category": "Azure - Managed Identity",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (sp:AZServicePrincipal) RETURN sp",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
+      "name": "All managed identities",
+      "category": "Azure - Managed Identity",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (sp:AZServicePrincipal {serviceprincipaltype: 'ManagedIdentity'}) RETURN sp",
+          "allowCollapse": true
+        }
+      ]
+    }
+  ]
+}
