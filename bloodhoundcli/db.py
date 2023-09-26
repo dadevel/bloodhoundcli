@@ -95,11 +95,20 @@ def execute(statement: str, **parameters: Any) -> list[Any]:
 
 @db.command()
 def generate_wordlist() -> None:
-    for line in execute('MATCH (o) WHERE o:User or o:Computer RETURN o.samaccountname AS line UNION MATCH (o:OU) RETURN left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
+    words = set()
+    for line in execute('MATCH (o) WHERE o:User OR o:Computer RETURN o.samaccountname AS line UNION MATCH (o:OU) RETURN left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
         if not line:
             continue
-        print(line.upper())
-        print(line.lower())
+        if line.endswith('$'):
+            line = line.rstrip('$')
+        for word in line.split():
+            words.add(word)
+            if word.isupper():
+                words.add(word.lower())
+            else:
+                words.add(word)
+    for word in words:
+        print(word)
 
 
 def find_shared_passwords() -> None:

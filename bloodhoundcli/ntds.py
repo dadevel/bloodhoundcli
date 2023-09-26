@@ -17,18 +17,33 @@ def ntds() -> None:
 @ntds.command()
 @click.argument('ntds')
 @click.option('-t', '--task', nargs=2, multiple=True)
-@click.option('--keep-computers', is_flag=True)
-def crack(ntds: str, task: list[tuple[str, str]], keep_computers: bool) -> None:
+def crack(ntds: str, task: list[tuple[str, str]]) -> None:
     with open(ntds, 'r') as input:
-        with open(f'{ntds}.users', 'w') as userlist, open(f'{ntds}.computers', 'w') as computerlist:
+        with open(f'{ntds}.users', 'w') as userlist:
+            for line in input:
+                identity, _ = line.split(':', maxsplit=1)
+                if not identity.endswith('$'):
+                    userlist.write(line)
+    for wordlist, ruleset in task:
+        run_hashcat(1000, f'{ntds}.users', wordlist, '-r', ruleset, '-O', '-w', '3', '-a', '0', '--loopback')
+
+
+@ntds.command()
+@click.argument('ntds')
+def pre2k(ntds: str) -> None:
+    with open(ntds, 'r') as input:
+        with open(f'{ntds}.computers', 'w') as computerlist:
             for line in input:
                 identity, _ = line.split(':', maxsplit=1)
                 if identity.endswith('$'):
                     computerlist.write(line)
-                else:
-                    userlist.write(line)
-    for wordlist, ruleset in task:
-        run_hashcat(1000, ntds if keep_computers else f'{ntds}.users', wordlist, '-r', ruleset, '-O', '-w', '3', '-a', '0', '--loopback')
+    with open(f'{ntds}.pre2k.txt', 'w') as file:
+        for name in execute('MATCH (c:Computer {enabled: true}) WHERE c.lastlogon=0 OR c.lastlogon IS NULL RETURN toLower(c.samaccountname)'):
+            name = name.removesuffix('$')
+            name = name[:14]
+            file.write(name)
+            file.write('\n')
+    run_hashcat(1000, f'{ntds}.computers', f'{ntds}.pre2k.txt', '-O', '-w', '3', '-a', '0')
 
 
 @ntds.command('import')

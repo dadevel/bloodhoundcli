@@ -51,6 +51,12 @@ Also creates `SharesPasswordWith` edges between users.
 bloodhoundcli ntds import -n ./corp.local.ntds -c ./corp.local.ntds.cleartext -p ./corp.local.ntds.potfile
 ~~~
 
+Identify pre-created computers.
+
+~~~ bash
+bloodhoundcli ntds pre2k ./corp.local.ntds
+~~~
+
 Enrich BloodHound with nodes for standalone computers and local users by leveraging the SQLite database of [crackmapexec](https://github.com/porchetta-industries/crackmapexec).
 This includes `nthash` properties from SAM dumps and `AdminTo` as well as `SharesPasswordWith` edges e.g. to identify local admin password reuse.
 
