@@ -14,6 +14,7 @@ def cme() -> None:
 @click.argument('cmedb')
 def import_(cmedb: str) -> None:
     with sqlite3.connect(cmedb) as db:
+        print('importing credentials and admin relations...')
         cursor = db.execute('SELECT u.domain, u.username, u.password, u.credtype, h.hostname, h.domain, h.os FROM users AS u, hosts AS h, admin_relations AS a WHERE u.id=a.userid AND a.hostid=h.id AND NOT u.domain LIKE "%.%"')
         for userdomain, username, secret, credtype, hostname, hostdomain, os in cursor:
             domainuser = '.' in userdomain
@@ -34,6 +35,12 @@ def import_(cmedb: str) -> None:
                 execute('MATCH (u:User {name: $user}) MATCH (c:Computer {name: $computer}) MERGE (u)-[:AdminTo]->(c)', user=user, computer=f'{hostname}.{hostdomain}'.upper())
             else:
                 execute('MATCH (u:User {name: $user}) MATCH (c:Computer {name: $computer}) MERGE (u)-[:AdminTo]->(c)', user=user, computer=computer)
+
+        print('importing smb signing status relations...')
+        cursor = db.execute('SELECT upper(hostname)||"."||upper(domain), signing FROM hosts WHERE lower(os) LIKE "windows%" AND upper(hostname)<>upper(domain)')
+        for computer, signing in cursor:
+            execute('MATCH (c:Computer {name: $computer}) SET c.smbsigning=$signing', computer=computer, signing=bool(signing))
+
     find_shared_passwords()
 
 
