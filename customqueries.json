@@ -633,6 +633,16 @@
       ]
     },
     {
+      "name": "Uses that can be delegated",
+      "category": "Kerberos",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a:User)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid ENDS WITH '-525' WITH COLLECT(a) AS x MATCH (b:User {enabled: true, highvalue: true, sensitive: false}) WHERE NOT b IN x RETURN b"
+        }
+      ]
+    },
+    {
       "name": "All GPOs",
       "category": "GPOs",
       "queryList": [
@@ -738,7 +748,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain {owned: true})-[:Contains*1..]->(a)-[r]->(b)<-[Contains*1..]-(:Domain {owned: false}) RETURN p"
+          "query": "MATCH p = (:Domain {owned: true})-[:Contains*1..]->(a)-[]->(b)<-[Contains*1..]-(:Domain {owned: false}) RETURN p"
         }
       ]
     },
@@ -927,12 +937,12 @@
       ]
     },
     {
-      "name": "Computers without LAPS",
+      "name": "Active computers without LAPS excluding DCs",
       "category": "Computers",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[r:Contains*1..]->(c:Computer {enabled: true, haslaps: false}) WHERE toUpper(c.operatingsystem) CONTAINS 'WINDOWS' RETURN p",
+          "query": "MATCH (c:Computer)-[:MemberOf*1..]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS x MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true, haslaps: false}) WHERE NOT c IN x AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS' AND NOT c.lastlogon IN [-1.0, 0.0] AND c.lastlogon > (datetime().epochseconds - (90 * 86400)) RETURN p",
           "allowCollapse": false
         }
       ]
@@ -943,7 +953,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[r:Contains*1..]->(c:Computer {enabled: true, haslaps: true}) RETURN p",
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true, haslaps: true}) RETURN p",
           "allowCollapse": false
         }
       ]
@@ -1294,7 +1304,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (u {onpremisesyncenabled: true})-[:AZHasRole|AZMemberOf*1..]->(r:AZRole) WHERE r.displayname =~ '(?i)Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator' RETURN p"
+          "query": "MATCH p = (u {onpremsyncenabled: true})-[:AZHasRole|AZMemberOf*1..]->(r:AZRole) WHERE r.displayname =~ '(?i)Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator' RETURN p"
         }
       ]
     },
@@ -1304,7 +1314,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u {onpremisesyncenabled: true}) RETURN u"
+          "query": "MATCH (u {onpremsyncenabled: true}) RETURN u"
         }
       ]
     },
@@ -1409,7 +1419,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[r]->(:AZVM) RETURN p"
+          "query": "MATCH p = (n)-[]->(:AZVM) RETURN p"
         }
       ]
     },
@@ -1419,7 +1429,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[r]->(:AZKeyVault) RETURN p"
+          "query": "MATCH p = (n)-[]->(:AZKeyVault) RETURN p"
         }
       ]
     },
@@ -1446,12 +1456,23 @@
       ]
     },
     {
+      "name": "Paths from users to subscriptions",
+      "category": "Azure - Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((u:AZUser)-[*1..]->(s:AZSubscription)) WHERE u<>s RETURN p",
+          "allowCollapse": true
+        }
+      ]
+    },
+    {
       "name": "Service principals with MS Graph app role assignments",
       "category": "Azure - MS Graph",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p=(m:AZServicePrincipal)-[r:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All]->(n:AZServicePrincipal) RETURN p",
+          "query": "MATCH p=(m:AZServicePrincipal)-[:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All]->(n:AZServicePrincipal) RETURN p",
           "allowCollapse": true
         }
       ]
@@ -1462,7 +1483,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[r:AZAddOwner|AZAddSecret|AZAppAdmin|AZCloudAppAdmin|AZMGAddOwner|AZMGAddSecret|AZOwns]->(g:AZServicePrincipal {appdisplayname: \"Microsoft Graph\"}) RETURN p",
+          "query": "MATCH p = (n)-[:AZAddOwner|AZAddSecret|AZAppAdmin|AZCloudAppAdmin|AZMGAddOwner|AZMGAddSecret|AZOwns]->(g:AZServicePrincipal {appdisplayname: \"Microsoft Graph\"}) RETURN p",
           "allowCollapse": true
         }
       ]
@@ -1473,7 +1494,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (n) WHERE NOT n.displayname='Microsoft Graph' WITH n MATCH p = shortestPath((n)-[r*1..]->(g:AZServicePrincipal {appdisplayname: 'Microsoft Graph'})) WHERE n<>g RETURN p",
+          "query": "MATCH (n) WHERE NOT n.displayname='Microsoft Graph' WITH n MATCH p = shortestPath((n)-[*1..]->(g:AZServicePrincipal {appdisplayname: 'Microsoft Graph'})) WHERE n<>g RETURN p",
           "allowCollapse": true
         }
       ]
