@@ -107,14 +107,14 @@ def import_ntds(ntdsdb) -> None:
 
 def import_potfile(ntdsdb, potdb) -> None:
     count = sum(execute(
-        'UNWIND $rows AS row MATCH (u:User {samaccountname: row[0]}) SET u.cracked=true, u.password=row[1] RETURN count(u)',
+        'UNWIND $rows AS row MATCH (a {samaccountname: row[0]}) SET a.cracked=true, a.password=row[1] RETURN count(a)',
         rows=[
             [entry['user'], password]
             for nthash, password in potdb.items()
             for entry in ntdsdb[nthash]
         ],
     ))
-    print(f'updated cracked passwords of {count} users')
+    print(f'updated cracked passwords of {count} accounts')
 
 
 def parse_ntds_cleartext(file: TextIO) -> dict[str, str]:
