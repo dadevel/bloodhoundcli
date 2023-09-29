@@ -541,6 +541,16 @@
       ]
     },
     {
+      "name": "Paths from outside tier 0 to disabled users",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[r]->(b:User {enabled: false}) WHERE NOT a.tier0 AND r.isacl RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Kerberoastable users",
       "category": "Kerberos",
       "queryList": [
@@ -1105,7 +1115,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (c:Computer {enabled: true}) WHERE (c.lastlogon=0 OR c.lastlogon IS NULL) AND c.password=toLower(left(replace(c.samaccountname, '$', ''), 14)) SET c.weakpassword=true RETURN c"
+          "query": "MATCH (c:Computer {enabled: true}) WHERE c.password=toLower(left(replace(c.samaccountname, '$', ''), 14)) SET c.weakpassword=true RETURN c"
         }
       ]
     },
@@ -1115,15 +1125,15 @@
       "queryList": [
         {
           "final": false,
-          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 525, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) SET x.highvalue=true, x.tier0=true"
+          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) SET x.highvalue=true, x.tier0=true RETURN x"
         },
         {
           "final": false,
-          "query": "MATCH (x:Group) WHERE any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true, x.tier0=true"
+          "query": "MATCH (x:Group) WHERE any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true, x.tier0=true RETURN x"
         },
         {
           "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN ['DnsAdmins'] WHERE x.name STARTS WITH toUpper(y + '@')) SET x.highvalue=true, x.tier0=true"
+          "query": "MATCH (x:Group) WHERE any(y IN ['DnsAdmins'] WHERE x.name STARTS WITH toUpper(y + '@')) SET x.highvalue=true, x.tier0=true RETURN x"
         }
       ]
     },
@@ -1263,7 +1273,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(y {tier0: true}) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(y {tier0: true}) RETURN p UNION MATCH (p {tier0: true}) RETURN p"
         }
       ]
     },
@@ -1273,12 +1283,12 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(y {highvalue: true}) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(y {highvalue: true}) RETURN p UNION MATCH (p {highvalue: true}) RETURN p"
         }
       ]
     },
     {
-      "name": "Show users and computers violating Tier 0",
+      "name": "Show users and computers violating Tier 0 (10 hops)",
       "category": "Tier 0",
       "queryList": [
         {
