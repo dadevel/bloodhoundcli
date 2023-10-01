@@ -96,7 +96,7 @@ def execute(statement: str, **parameters: Any) -> list[Any]:
 @db.command()
 def generate_wordlist() -> None:
     words = set()
-    for line in execute('MATCH (o) WHERE o:User OR o:Computer RETURN o.samaccountname AS line UNION MATCH (o:OU) RETURN left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
+    for line in execute('MATCH (o) WHERE o:User OR o:Computer RETURN o.samaccountname AS line UNION MATCH (o) WHERE o:Group OR o:OU RETURN left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
         if not line:
             continue
         if line.endswith('$'):
