@@ -36,6 +36,13 @@ def import_(cmedb: str) -> None:
             else:
                 execute('MATCH (u:User {name: $user}) MATCH (c:Computer {name: $computer}) MERGE (u)-[:AdminTo]->(c)', user=user, computer=computer)
 
+        print('importing local admin from sam dumps...')
+        cursor = db.execute('SELECT u.domain, u.username, u.password FROM users AS u WHERE NOT u.domain LIKE "%.%" AND u.credtype="hash" AND lower(username)="administrator"')
+        for computername, username, nthash in cursor:
+            upn = f'{username}@{computername}'.upper()
+            execute('MERGE (u:Base:User {name: $name}) SET u.objectid=$id, u.samaccountname=$accountname, u.local=true, u.nthash=$secret', id=md5(upn), name=upn, accountname=username, secret=nthash)
+            execute('MATCH (u:User {name: $user}) MATCH (c:Computer {samaccountname: $computer}) MERGE (u)-[:AdminTo]->(c)', user=upn, computer=f'{computername}$'.upper())
+
         print('importing smb signing status relations...')
         cursor = db.execute('SELECT upper(hostname)||"."||upper(domain), signing FROM hosts WHERE lower(os) LIKE "windows%" AND upper(hostname)<>upper(domain)')
         for computer, signing in cursor:
