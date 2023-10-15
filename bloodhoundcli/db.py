@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 from requests.auth import HTTPBasicAuth
 import click
@@ -69,6 +70,48 @@ def query(stdin: bool, statement: str) -> None:
     except RuntimeError as e:
         print(e, file=sys.stderr)
         exit(1)
+
+
+@db.command()
+@click.argument('path')
+def ingest(path: str) -> None:
+    endpoint = os.environ.get('BLOODHOUND_URL') or 'http://localhost:8080'
+    username = os.environ.get('BLOODHOUND_USERNAME') or 'spam@example.com'
+    password = os.environ.get('BLOODHOUND_PASSWORD') or click.prompt('password', hide_input=True)
+    with requests.Session() as session:
+        click.echo('authenticating')
+        response = session.post(f'{endpoint}/api/v2/login', headers=dict(accept='application/json'), json=dict(login_method='secret', username=username, secret=password))
+        response.raise_for_status()
+        response = response.json()
+        token = response['data']['session_token']
+
+        click.echo('starting upload')
+        response = session.post(f'{endpoint}/api/v2/file-upload/start', headers=dict(accept='application/json', authorization=f'Bearer {token}'))
+        response.raise_for_status()
+        response = response.json()
+        upload_id = response['data']['id']
+        click.echo(f'id: {upload_id}')
+
+        click.echo('uploading')
+        with open(path, 'rb') as file:
+            response = session.post(f'{endpoint}/api/v2/file-upload/{upload_id}', headers=dict(accept='application/json', authorization=f'Bearer {token}'), data=file.read())
+            response.raise_for_status()
+
+        click.echo('ending upload')
+        response = session.post(f'{endpoint}/api/v2/file-upload/{upload_id}/end', headers=dict(accept='application/json', authorization=f'Bearer {token}'))
+        response.raise_for_status()
+
+        click.echo('awaiting ingestion')
+        completed = False
+        while not completed:
+            response = session.get(f'{endpoint}/api/v2/file-upload', headers=dict(accept='application/json', authorization=f'Bearer {token}'))
+            response.raise_for_status()
+            response = response.json()
+            for item in response['data']:
+                if item['id'] == upload_id and item['status'] == 2:
+                    completed = True
+                    break
+            time.sleep(1)
 
 
 def exec_and_print(statement: str, **parameters: Any):
