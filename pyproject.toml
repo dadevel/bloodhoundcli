@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bloodhoundcli"
-version = "0.0.5"
+version = "0.0.6"
 description = ""
 authors = ["dadevel <dadevel@disroot.org>"]
 license = "MIT"
