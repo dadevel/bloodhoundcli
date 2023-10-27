@@ -40,6 +40,8 @@ def import_(cmedb: str) -> None:
         cursor = db.execute('SELECT u.domain, u.username, u.password FROM users AS u WHERE NOT u.domain LIKE "%.%" AND u.credtype="hash" AND lower(username)="administrator"')
         for computername, username, nthash in cursor:
             upn = f'{username}@{computername}'.upper()
+            if ':' in nthash:
+                _, nthash = nthash.split(':', maxsplit=1)
             execute('MERGE (u:Base:User {name: $name}) SET u.objectid=$id, u.samaccountname=$accountname, u.local=true, u.nthash=$secret', id=md5(upn), name=upn, accountname=username, secret=nthash)
             execute('MATCH (u:User {name: $user}) MATCH (c:Computer {samaccountname: $computer}) MERGE (u)-[:AdminTo]->(c)', user=upn, computer=f'{computername}$'.upper())
 
