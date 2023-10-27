@@ -13,6 +13,7 @@ import requests
 ENDPOINT = os.environ.get('NEO4J_ENDPOINT') or 'http://localhost:7474'
 USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
 PASSWORD = os.environ.get('NEO4J_PASSWORD') or 'neo4j'
+NEO4J_CONTAINER_PREFIX = 'bloodhound'
 
 
 @click.group()
@@ -23,32 +24,25 @@ def db() -> None:
 @db.command()
 @click.argument('name')
 def start(name: str) -> None:
-    process = subprocess.run(
-        [
-            'podman', 'run',
-            '--name', f'bloodhound-{name}',
-            '--detach',
-            '--rm',
-            '--publish', '127.0.0.1:7474:7474',
-            '--publish', '127.0.0.1:7687:7687',
-            '--env', 'NEO4J_AUTH=none',
-            '--volume', f'bloodhound-{name}:/data',
-            'docker.io/library/neo4j:4.4.12',
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    container_id = process.stdout.strip()
-    print(container_id)
-    timestamp = (datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(seconds=15)).isoformat()
-    subprocess.run(['podman', 'container', 'logs', '--follow', '--until', timestamp, container_id], check=True, capture_output=False)
+    start_neo4j(f'{NEO4J_CONTAINER_PREFIX}-{name}')
 
 
 @db.command()
 @click.argument('name')
 def stop(name: str) -> None:
-    subprocess.run(['podman', 'container', 'rm', '-f', f'bloodhound-{name}'], check=True, capture_output=False)
+    stop_neo4j(f'{NEO4J_CONTAINER_PREFIX}-{name}')
+
+
+@db.command()
+@click.argument('name')
+def switch(name: str) -> None:
+    process = subprocess.run(['podman', 'ps', '--format', 'json'], check=True, capture_output=True, text=True)
+    for container in json.loads(process.stdout):
+        for container_name in container['Names']:
+            if container_name.startswith(f'{NEO4J_CONTAINER_PREFIX}-'):
+                click.echo(f'stopping {container_name}')
+                stop_neo4j(container_name)
+    start_neo4j(f'{NEO4J_CONTAINER_PREFIX}-{name}')
 
 
 @db.command()
@@ -112,6 +106,33 @@ def ingest(path: str) -> None:
                     completed = True
                     break
             time.sleep(1)
+
+
+def start_neo4j(name: str) -> None:
+    process = subprocess.run(
+        [
+            'podman', 'run',
+            '--name', name,
+            '--detach',
+            '--rm',
+            '--publish', '127.0.0.1:7474:7474',
+            '--publish', '127.0.0.1:7687:7687',
+            '--env', 'NEO4J_AUTH=none',
+            '--volume', f'{name}:/data',
+            'docker.io/library/neo4j:4.4.12',
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    container_id = process.stdout.strip()
+    print(container_id)
+    timestamp = (datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(seconds=15)).isoformat()
+    subprocess.run(['podman', 'container', 'logs', '--follow', '--until', timestamp, container_id], check=True, capture_output=False)
+
+
+def stop_neo4j(name: str) -> None:
+    subprocess.run(['podman', 'container', 'stop', name], check=True, capture_output=False)
 
 
 def exec_and_print(statement: str, **parameters: Any):
