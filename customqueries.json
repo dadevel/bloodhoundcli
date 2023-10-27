@@ -96,7 +96,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(h {owned: true}) RETURN p"
+          "query": "MATCH p = (a)-[:Contains|AZContains*1..]->(b {owned: true}) WHERE (a:Domain OR a:AZTenant) RETURN p"
         }
       ]
     },
@@ -146,7 +146,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (u:User {enabled: true})<-[:HasSession]-(c:Computer {enabled: true}) WHERE c.operatingsystem =~ '(?i).*?(2000|2003|2008|xp|vista|7|me).*?' AND NOT c.lastlogon IN [-1.0, 0.0] AND c.lastlogon > (datetime().epochseconds - (90 * 86400)) RETURN p"
+          "query": "MATCH p = (u:User {enabled: true})<-[:HasSession]-(c:Computer {enabled: true}) WHERE c.operatingsystem =~ '(?i)Windows.*?(2000|2003|2008|xp|vista|7|me).*?' AND NOT c.lastlogon IN [-1.0, 0.0] AND c.lastlogon > (datetime().epochseconds - (90 * 86400)) RETURN p"
         }
       ]
     },
@@ -573,7 +573,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->({unconstraineddelegation: true}) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->({enabled: true, unconstraineddelegation: true}) RETURN p"
         }
       ]
     },
@@ -583,7 +583,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (c1:Computer)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid='S-1-5-9' OR g.objectid ENDS WITH '-516' WITH COLLECT(c1) AS x MATCH p = (:Domain)-[:Contains*1..]->(c2 {unconstraineddelegation: true}) WHERE NOT c2 IN x RETURN p"
+          "query": "MATCH (c1:Computer)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid='S-1-5-9' OR g.objectid ENDS WITH '-516' WITH COLLECT(c1) AS x MATCH p = (:Domain)-[:Contains*1..]->(c2 {enabled: true, unconstraineddelegation: true}) WHERE NOT c2 IN x RETURN p"
         }
       ]
     },
@@ -603,7 +603,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(x) WHERE NOT x.allowedtodelegate IS NULL AND x.trustedtoauth=true RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(x {enabled: true}) WHERE NOT x.allowedtodelegate IS NULL AND x.trustedtoauth=true RETURN p"
         }
       ]
     },
@@ -613,7 +613,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(x) WHERE NOT x.allowedtodelegate IS NULL AND x.trustedtoauth=false RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(x {enabled: true}) WHERE NOT x.allowedtodelegate IS NULL AND x.trustedtoauth=false RETURN p"
         }
       ]
     },
@@ -898,12 +898,22 @@
       ]
     },
     {
+      "name": "Tier 0 users without logon since 90 days",
+      "category": "Users",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier0: true}) WHERE NOT u.lastlogon IN [-1.0, 0.0] AND u.lastlogon < (datetime().epochseconds - (90 * 86400)) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Active computers with outdated OS",
       "category": "Computers",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE c.operatingsystem =~ '(?i).*?(2000|2003|2008|xp|vista|7|me).*?' AND NOT c.lastlogon IN [-1.0, 0.0] AND c.lastlogon > (datetime().epochseconds - (90 * 86400)) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE c.operatingsystem =~ '(?i)Windows.*?(2000|2003|2008|xp|vista|7|me).*?' AND NOT c.lastlogon IN [-1.0, 0.0] AND c.lastlogon > (datetime().epochseconds - (90 * 86400)) RETURN p"
         }
       ]
     },
