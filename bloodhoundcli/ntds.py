@@ -16,14 +16,39 @@ def ntds() -> None:
 
 @ntds.command()
 @click.argument('ntds')
+@click.option('--lm-mask', default='?d?uÄÜÖ !#$%*+-??@_.')
+@click.option('--brute-lm', is_flag=True, default=False)
 @click.option('-t', '--task', nargs=2, multiple=True)
-def crack(ntds: str, task: list[tuple[str, str]]) -> None:
+def crack(ntds: str, lm_mask: str, brute_lm: bool, task: list[tuple[str, str]]) -> None:
     with open(ntds, 'r') as input:
         with open(f'{ntds}.users', 'w') as userlist:
             for line in input:
                 identity, _ = line.split(':', maxsplit=1)
                 if not identity.endswith('$'):
                     userlist.write(line)
+
+    if brute_lm:
+        click.echo('cracking lm hashes')
+        for wordlist, ruleset in task:
+            run_hashcat(3000, f'{ntds}.users', '--increment', '--increment-min', '1', '-1', lm_mask, '?1?1?1?1?1?1?1', '-O', '-w', '3', '-a', '3')
+
+        process = run_hashcat(3000, f'{ntds}.users', '--show', capture=True)
+        with open(f'{ntds}.users.lm.txt', 'w') as passlist:
+            for line in process.stdout.splitlines():
+                if line.startswith('aad3b435b51404eeaad3b435b51404ee:'):
+                    continue
+                print(line)
+                _, password = line.split(':', maxsplit=1)
+                if password:
+                    passlist.write(password)
+                    passlist.write(password.lower())
+
+    click.echo('cracking nt hashes')
+
+    if brute_lm:
+        for wordlist, ruleset in task:
+            run_hashcat(1000, f'{ntds}.users', f'{ntds}.users.lm.txt', '-r', ruleset, '-O', '-w', '3', '-a', '0', '--loopback')
+
     for wordlist, ruleset in task:
         run_hashcat(1000, f'{ntds}.users', wordlist, '-r', ruleset, '-O', '-w', '3', '-a', '0', '--loopback')
 

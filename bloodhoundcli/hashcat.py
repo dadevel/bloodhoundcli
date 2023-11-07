@@ -20,8 +20,8 @@ def crack(mode: int, hashfile: str, args: str) -> None:
     run_hashcat(mode, hashfile, *args)
 
 
-def run_hashcat(mode: int, hashfile: str, *args: str) -> None:
-    subprocess.run(
+def run_hashcat(mode: int, hashfile: str, *args: str, capture: bool = False) -> subprocess.CompletedProcess:
+    return subprocess.run(
         [
             'hashcat',
             '-m', str(mode),
@@ -31,7 +31,8 @@ def run_hashcat(mode: int, hashfile: str, *args: str) -> None:
             *args,
         ],
         check=False,
-        capture_output=False,
+        capture_output=capture,
+        text=True,
     )
 
 
