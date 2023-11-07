@@ -938,12 +938,12 @@
       ]
     },
     {
-      "name": "Computers without Windows OS",
+      "name": "Computers with uncommon OS",
       "category": "Computers",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT c.operatingsystem CONTAINS 'Windows' RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT c.operatingsystem CONTAINS 'Windows' AND NOT c.operatingsystem CONTAINS 'Mac OS X' AND NOT c.operatingsystem CONTAINS 'macOS' RETURN p"
         }
       ]
     },
@@ -1128,6 +1128,16 @@
       ]
     },
     {
+      "name": "Mark Tier 0 users (1/1)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User) WHERE u.name STARTS WITH 'MSOL_' SET u.tier0=true, u.highvalue=true RETURN u"
+        }
+      ]
+    },
+    {
       "name": "Mark Tier 0 groups (1/3)",
       "category": "Tier 0",
       "queryList": [
@@ -1288,6 +1298,16 @@
       ]
     },
     {
+      "name": "Show users and computers violating Tier 0 (5 hops)",
+      "category": "Tier 0",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((x)-[*1..5]->(y:Domain)) WHERE x<>y AND (x:User OR x:Computer) AND (x.tier0=false OR x.tier0 IS NULL) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Show users and computers violating Tier 0 (10 hops)",
       "category": "Tier 0",
       "queryList": [
@@ -1298,78 +1318,118 @@
       ]
     },
     {
-      "name": "Users in privileged roles (10 hops)",
-      "category": "Azure - General",
+      "name": "Mark tier 0 roles",
+      "category": "Azure Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (u)-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole) WHERE r.displayname =~ '(?i)Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator' RETURN p"
+          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Administrator|Cloud Application Administrator|Directory Synchronization Accounts|Global Administrator|Intune Administrator|Privileged Authentication Administrator|Privileged Role Administrator|User Administrator' SET r.tier0=true, r.highvalue=true RETURN r"
         }
       ]
     },
     {
-      "name": "Users in privileged roles synced from on-prem (10 hops)",
-      "category": "Azure - General",
+      "name": "Mark valueable roles",
+      "category": "Azure Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (u {onpremsyncenabled: true})-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole) WHERE r.displayname =~ '(?i)Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator' RETURN p"
+          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Developer|Authentication Administrator|Authentication Policy Administrator|Cloud Device Administrator|Conditional Access Administrator|Directory Writers|Exchange Administrator|Global Reader|Helpdesk Administrator|Hybrid Identity Administrator|Password Administrator|Security Administrator' SET r.highvalue=true RETURN r"
         }
       ]
     },
     {
-      "name": "Users synced from on-prem",
-      "category": "Azure - General",
+      "name": "Mark users in tier 0 roles (10 hops)",
+      "category": "Azure Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u {onpremsyncenabled: true}) RETURN u"
+          "query": "MATCH p = (u)-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole) WHERE r.tier0 SET u.tier0=true, u.highvalue=true RETURN p"
         }
       ]
     },
     {
-      "name": "Groups synced from on-prem",
-      "category": "Azure - General",
+      "name": "Mark users in valueable roles (10 hops)",
+      "category": "Azure Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (g:AZGroup {onpremsyncenabled: true}) RETURN g"
+          "query": "MATCH p = (u)-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole) WHERE r.highvalue SET u.highvalue=true RETURN p"
         }
       ]
     },
     {
-      "name": "Owners of applications",
-      "category": "Azure - General",
+      "name": "Mark owners of subscriptions as tier 0",
+      "category": "Azure Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[:AZOwns]->(:AZApp) RETURN p"
+          "query": "MATCH p = (n)-[:AZOwns|AZUserAccessAdministrator]->(s:AZSubscription) SET n.tier0=true, n.highvalue=true, s.highvalue=true RETURN p"
         }
       ]
     },
     {
-      "name": "Users related to AAD Connect",
-      "category": "Azure - General",
+      "name": "Mark service principals with valueable MS Graph app role assignments",
+      "category": "Azure Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User {enabled: true}) WHERE toUpper(u.name) STARTS WITH 'MSOL_' RETURN u UNION MATCH (u:AZUser) WHERE toUpper(u.userprincipalname) STARTS WITH 'SYNC_' RETURN u"
+          "query": "MATCH p = (a:AZServicePrincipal)-[:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGOrganization_ReadWrite_All|AZMGPolicy_ReadWrite_AuthenticationMethod|AZMGPolicy_ReadWrite_AuthenticationMethod|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All|AZMGUserAuthenticationMethod_ReadWrite_All|AZMGUser_ManageIdentities_All|AZMGUser_ReadWrite_All]->(b:AZServicePrincipal) WHERE b.name STARTS WITH 'MICROSOFT GRAPH@' SET a.highvalue=true RETURN p"
         }
       ]
     },
     {
-      "name": "Owners of subscriptions",
-      "category": "Azure - General",
+      "name": "Mark apps that are running as tier 0 service principal",
+      "category": "Azure Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[:AZOwns|AZUserAccessAdministrator]->(:AZSubscription) RETURN p"
+          "query": "MATCH p = (a:AZApp)-[:AZRunsAs]->(:AZServicePrincipal {tier0: true}) SET a.tier0=true, a.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark apps that are running as valueable service principal",
+      "category": "Azure Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a:AZApp)-[:AZRunsAs]->(:AZServicePrincipal {highvalue: true}) SET a.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark owners of tier 0 applications",
+      "category": "Azure Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[:AZOwns]->(:AZApp {tier0: true}) SET a.tier0=true, a.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark owners of valueable applications",
+      "category": "Azure Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[:AZOwns]->(:AZApp {highvalue: true}) SET a.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark owners of any application as valueable",
+      "category": "Azure Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (n)-[:AZOwns]->(:AZApp) SET n.highvalue=true RETURN p"
         }
       ]
     },
     {
       "name": "Principals without Azure role but with RBAC role User Access Administrator (10 hops)",
-      "category": "Azure - General",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
@@ -1378,28 +1438,28 @@
       ]
     },
     {
-      "name": "Paths from users to high value targets (10 hops)",
-      "category": "Azure - Paths",
+      "name": "Paths into tier 0 (10 hops)",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((u:AZUser)-[r*1..10]->(n {highvalue:true})) WHERE NONE (r IN relationships(p) WHERE type(r)= 'GetChanges') AND NONE (r in relationships(p) WHERE type(r) = 'GetChangesAll') AND NOT u = n RETURN p"
+          "query": "MATCH p = shortestPath((a)-[r*1..10]->(b {tier0: true})) WHERE a<>b AND (NOT a.tier0 OR a.tier0 IS NULL) RETURN p"
         }
       ]
     },
     {
-      "name": "Paths from users synced from on-prem to high value targets (10 hops)",
-      "category": "Azure - Paths",
+      "name": "Paths to valueable targets (10 hops)",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((u:AZUser {onpremsyncenabled: true})-[r*1..10]->(n {highvalue: true})) WHERE NONE (r IN relationships(p) WHERE type(r) = 'GetChanges') AND NONE (r in relationships(p) WHERE type(r) = 'GetChangesAll') AND NOT u = n RETURN p"
+          "query": "MATCH p = shortestPath((a)-[r*1..10]->(b {highvalue: true})) WHERE a<>b AND (NOT a.highvalue OR a.highvalue IS NULL) RETURN p"
         }
       ]
     },
     {
       "name": "Paths to high value roles (10 hops)",
-      "category": "Azure - Paths",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
@@ -1409,7 +1469,7 @@
     },
     {
       "name": "Paths from applications to high value targets (10 hops)",
-      "category": "Azure - Paths",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
@@ -1418,38 +1478,48 @@
       ]
     },
     {
-      "name": "Direct paths to VMs",
-      "category": "Azure - Paths",
+      "name": "Paths to VMs excluding tier 0 (3 hops)",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[]->(:AZVM) RETURN p"
+          "query": "MATCH p = shortestPath((a)-[*1..3]->(b:AZVM)) WHERE a<>b AND (NOT a.tier0 OR a.tier0 IS NULL) RETURN p"
         }
       ]
     },
     {
-      "name": "Direct paths to Key Vaults",
-      "category": "Azure - Paths",
+      "name": "Paths to key vaults excluding tier 0 (3 hops)",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[]->(:AZKeyVault) RETURN p"
+          "query": "MATCH p = shortestPath((a)-[*1..3]->(b:AZKeyVault)) WHERE a<>b AND (NOT a.tier0 OR a.tier0 IS NULL) RETURN p"
         }
       ]
     },
     {
-      "name": "Direct paths to Ressource Groups (untested)",
-      "category": "Azure - Paths",
+      "name": "Paths to ressource groups excluding tier 0 (3 hops)",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[]->(:AZKeyVault) RETURN p"
+          "query": "MATCH p = shortestPath((a)-[*1..3]->(b:AZResourceGroup)) WHERE a<>b AND (NOT a.tier0 OR a.tier0 IS NULL) RETURN p"
         }
       ]
     },
     {
-      "name": "Owners of Azure groups (untested)",
-      "category": "Azure - Paths",
+      "name": "Paths to subscriptions excluding tier 0 (3 hops)",
+      "category": "Azure Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((a)-[*1..3]->(b:AZSubscription)) WHERE a<>b AND (NOT a.tier0 OR a.tier0 IS NULL) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Owners of groups",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
@@ -1458,18 +1528,8 @@
       ]
     },
     {
-      "name": "Paths to subscriptions (10 hops)",
-      "category": "Azure - Paths",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = shortestPath((m)-[*1..10]->(n:AZSubscription)) WHERE NOT m = n RETURN p"
-        }
-      ]
-    },
-    {
       "name": "Paths from principals without an Azure role but the RBAC role User Access Administrator to resources (10 hops)",
-      "category": "Azure - Paths",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
@@ -1478,28 +1538,28 @@
       ]
     },
     {
-      "name": "Paths from users to subscriptions (10 hops)",
-      "category": "Azure - Paths",
+      "name": "Paths from guests to valueable objects (3 hops)",
+      "category": "Azure Paths",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((u:AZUser)-[*1..10]->(s:AZSubscription)) WHERE u<>s RETURN p"
+          "query": "MATCH p = shortestPath((a {usertype:'Guest'})-[*1..3]->(b {highvalue: true})) WHERE a<>b RETURN p"
         }
       ]
     },
     {
       "name": "Service principals with MS Graph app role assignments",
-      "category": "Azure - MS Graph",
+      "category": "Azure MS Graph",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p=(m:AZServicePrincipal)-[:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All]->(n:AZServicePrincipal) RETURN p"
+          "query": "MATCH p = (a:AZServicePrincipal)-[]->(b:AZServicePrincipal) WHERE b.name STARTS WITH 'MICROSOFT GRAPH@' RETURN p"
         }
       ]
     },
     {
       "name": "Direct controllers of MS Graph",
-      "category": "Azure - MS Graph",
+      "category": "Azure MS Graph",
       "queryList": [
         {
           "final": true,
@@ -1509,7 +1569,7 @@
     },
     {
       "name": "Shortest path to MS Graph (10 hops)",
-      "category": "Azure - MS Graph",
+      "category": "Azure MS Graph",
       "queryList": [
         {
           "final": true,
@@ -1519,7 +1579,7 @@
     },
     {
       "name": "Shortest path from owned users to service principals",
-      "category": "Azure - Managed Identity",
+      "category": "Azure Managed Identity",
       "queryList": [
         {
           "final": true,
@@ -1529,7 +1589,7 @@
     },
     {
       "name": "Shortest path from owned users to managed identities",
-      "category": "Azure - Managed Identity",
+      "category": "Azure Managed Identity",
       "queryList": [
         {
           "final": true,
@@ -1539,7 +1599,7 @@
     },
     {
       "name": "Shortest path from all users to managed identities",
-      "category": "Azure - Managed Identity",
+      "category": "Azure Managed Identity",
       "queryList": [
         {
           "final": true,
@@ -1549,7 +1609,7 @@
     },
     {
       "name": "All service principals",
-      "category": "Azure - Managed Identity",
+      "category": "Azure Managed Identity",
       "queryList": [
         {
           "final": true,
@@ -1559,7 +1619,7 @@
     },
     {
       "name": "All managed identities",
-      "category": "Azure - Managed Identity",
+      "category": "Azure Managed Identity",
       "queryList": [
         {
           "final": true,
@@ -1568,12 +1628,53 @@
       ]
     },
     {
-      "name": "Mark tier 0 users and groups",
-      "category": "Azure - Tier 0",
+      "name": "Users in valueable roles synced from on-prem (10 hops)",
+      "category": "Azure Synchronization",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((m)-[:AZMemberOf|AZHasRole*1..10]->(n:AZRole)) WHERE m<>n AND n.displayname =~ '(?i)Global Administrator|User Administrator|Cloud Application Administrator|Authentication Policy Administrator|Exchange Administrator|Helpdesk Administrator|Privileged Authentication Administrator' SET m.highvalue=true, n.highvalue=true RETURN p"
+          "query": "MATCH p = (u {onpremsyncenabled: true})-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole) WHERE r.highvalue RETURN p"
+
+        }
+      ]
+    },
+    {
+      "name": "Paths from users synced from on-prem to high value targets (10 hops)",
+      "category": "Azure Synchronization",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((u:AZUser {onpremsyncenabled: true})-[r*1..10]->(n {highvalue: true})) WHERE u<>n RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users synced from on-prem",
+      "category": "Azure Synchronization",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u {onpremsyncenabled: true}) RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Groups synced from on-prem",
+      "category": "Azure Synchronization",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (g:AZGroup {onpremsyncenabled: true}) RETURN g"
+        }
+      ]
+    },
+    {
+      "name": "Users related to AAD Connect",
+      "category": "Azure Synchronization",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true}) WHERE toUpper(u.name) STARTS WITH 'MSOL_' RETURN u UNION MATCH (u:AZUser) WHERE toUpper(u.userprincipalname) STARTS WITH 'SYNC_' RETURN u"
         }
       ]
     }

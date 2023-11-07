@@ -24,6 +24,8 @@ In any case complete the setup by installing the [custom queries](./customquerie
 curl -Lo ~/.config/bloodhound/customqueries.json https://raw.githubusercontent.com/dadevel/bloodhoundcli/main/customqueries.json
 ~~~
 
+Thanks to @luemmelsec for his [Azure related custom queries](https://github.com/luemmelsec/custom-bloodhound-queries).
+
 # Usage
 
 Create/destroy a Neo4j container with [podman](https://github.com/containers/podman).
