@@ -2,8 +2,6 @@
 
 Collection of various utilities to aid in Pentesting with [BloodHound](https://github.com/bloodhoundad/bloodhound).
 
-> **Warning:** This project is work in progress and may be unstable 🚧
-
 # Setup
 
 a) With [pipx](https://github.com/pypa/pipx).
@@ -46,14 +44,21 @@ JANE.DOE@CORP.LOCAL
 EOF
 ~~~
 
-Run the output of [impacket-secretsdump](https://github.com/fortra/impacket) trough [hashcat](https://github.com/hashcat/hashcat) and enrich BloodHound with `nthash` and `password` properties for user nodes.
-Also creates `SharesPasswordWith` edges between users.
+Run a DCSync from [impacket-secretsdump](https://github.com/fortra/impacket) with multiple wordlists and rulesets trough [hashcat](https://github.com/hashcat/hashcat).
+
+~~~ bash
+bloodhoundcli db generate-wordlist > ./custom-words.txt  # made of usernames, descriptions, etc.
+bloodhoundcli ntds crack ./corp.local.ntds -t ./clem9669-wordlists/dictionnaire_de ./clem9669-hashcat-rules/clem9669_medium.rule -t ./custom-words.txt ./unicorn-hashcat-rules/unicorn\ rules/SuperUnicorn.rule -t ./weakpass-3.txt ./unicorn-hashcat-rules/unicorn\ rules/Unicorn250.rule
+~~~
+
+Import the DCSync output and Hashcat potfile into BloodHound.
+This adds `nthash` and `password` properties to users and creates `SharesPasswordWith` edges between users.
 
 ~~~ bash
 bloodhoundcli ntds import -n ./corp.local.ntds -c ./corp.local.ntds.cleartext -p ./corp.local.ntds.potfile
 ~~~
 
-Identify pre-created computers.
+Identify pre-created computers by trying to crack their hashes with Hashcat.
 
 ~~~ bash
 bloodhoundcli ntds pre2k ./corp.local.ntds
@@ -64,4 +69,11 @@ This includes `nthash` properties from SAM dumps and `AdminTo` as well as `Share
 
 ~~~ bash
 bloodhoundcli cme import ~/.cme/workspaces/default/smb.db
+~~~
+
+Enrich BloodHound with historical session data (work in progress, potentially unstable).
+First export recent logons from Windows Event Logs with [Get-RecentLogons.ps1](./Get-RecentLogons.ps1), then transfer the JSON output to your computer and finally import it into Neo4j.
+
+~~~ bash
+bloodhoundcli logons import ./events.json
 ~~~
