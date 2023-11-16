@@ -24,11 +24,11 @@ LOGON_TYPE_TABLE = {
 
 
 @click.group()
-def logons() -> None:
+def winevent() -> None:
     pass
 
 
-@logons.command('import')
+@winevent.command('import')
 @click.argument('eventfile', default='-')
 def import_(eventfile: str) -> None:
     file = sys.stdin if eventfile == '-' else open(eventfile)
@@ -46,3 +46,15 @@ def import_(eventfile: str) -> None:
             logontype=LOGON_TYPE_TABLE.get(event.get('logontype')),
             authenticationpackage=authpkg,
         )
+        if event.get('elevated'):
+            db.execute(
+                'MATCH (c:Computer {name: $computerfqdn}) MATCH (u:User {objectid: $usersid}) MERGE (u)-[:AdminTo]->(c)',
+                computerfqdn=event['computerfqdn'].upper(),
+                usersid=event['usersid'],
+            )
+        elif event.get('logontype') == 10:
+            db.execute(
+                'MATCH (c:Computer {name: $computerfqdn}) MATCH (u:User {objectid: $usersid}) MERGE (u)-[:CanRDP]->(c)',
+                computerfqdn=event['computerfqdn'].upper(),
+                usersid=event['usersid'],
+            )

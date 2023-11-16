@@ -16,13 +16,11 @@ b) With [pip](https://github.com/pypa/pip).
 pip install --user git+https://github.com/dadevel/bloodhoundcli.git@main
 ~~~
 
-In any case complete the setup by installing the [custom queries](./customqueries.json) for BloodHound.
+In any case complete the setup by installing the [custom queries](./customqueries.json) for BloodHound (including queries from [LuemmelSec/Custom-BloodHound-Queries](https://github.com/LuemmelSec/Custom-BloodHound-Queries)).
 
 ~~~ bash
 curl -Lo ~/.config/bloodhound/customqueries.json https://raw.githubusercontent.com/dadevel/bloodhoundcli/main/customqueries.json
 ~~~
-
-Thanks to @luemmelsec for his [Azure related custom queries](https://github.com/luemmelsec/custom-bloodhound-queries).
 
 # Usage
 
@@ -51,7 +49,7 @@ bloodhoundcli db generate-wordlist > ./custom-words.txt  # made of usernames, de
 bloodhoundcli ntds crack ./corp.local.ntds -t ./clem9669-wordlists/dictionnaire_de ./clem9669-hashcat-rules/clem9669_medium.rule -t ./custom-words.txt ./unicorn-hashcat-rules/unicorn\ rules/SuperUnicorn.rule -t ./weakpass-3.txt ./unicorn-hashcat-rules/unicorn\ rules/Unicorn250.rule
 ~~~
 
-Import the DCSync output and Hashcat potfile into BloodHound.
+Import the DCSync output and Hashcat potfile into BloodHound (inspired by [knavesec/max](https://github.com/knavesec/max) and [syss-research/hashcathelper](https://github.com/syss-research/hashcathelper)).
 This adds `nthash` and `password` properties to users and creates `SharesPasswordWith` edges between users.
 
 ~~~ bash
@@ -71,9 +69,9 @@ This includes `nthash` properties from SAM dumps and `AdminTo` as well as `Share
 bloodhoundcli cme import ~/.cme/workspaces/default/smb.db
 ~~~
 
-Enrich BloodHound with historical session data (work in progress, potentially unstable).
+Enrich BloodHound with historical session data as well as inferred RDP and local admin edges (original idea from [this blog post](https://medium.com/@rantasec/bloodhound-for-blue-teams-windows-event-id-4624-a259c76ee09e)).
 First export recent logons from Windows Event Logs with [Get-RecentLogons.ps1](./Get-RecentLogons.ps1), then transfer the JSON output to your computer and finally import it into Neo4j.
 
 ~~~ bash
-bloodhoundcli logons import ./events.json
+bloodhoundcli winevent import ./logons.json
 ~~~
