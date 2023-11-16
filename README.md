@@ -1,5 +1,7 @@
 # bloodhoundcli
 
+![Screenshot](./assets/demo.png)
+
 Collection of various utilities to aid in Pentesting with [BloodHound](https://github.com/bloodhoundad/bloodhound).
 
 # Setup
