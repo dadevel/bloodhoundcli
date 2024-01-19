@@ -10,9 +10,9 @@ from requests.auth import HTTPBasicAuth
 import click
 import requests
 
-ENDPOINT = os.environ.get('NEO4J_ENDPOINT') or 'http://localhost:7474'
-USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
-PASSWORD = os.environ.get('NEO4J_PASSWORD') or 'neo4j'
+NEO4J_URL = os.environ.get('NEO4J_URL') or 'http://localhost:7474'
+NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
+NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD') or 'neo4j'
 NEO4J_CONTAINER_PREFIX = 'bloodhound'
 
 
@@ -31,6 +31,13 @@ def start(name: str) -> None:
 @click.argument('name')
 def stop(name: str) -> None:
     stop_neo4j(f'{NEO4J_CONTAINER_PREFIX}-{name}')
+
+
+@db.command()
+@click.argument('name')
+def delete(name: str) -> None:
+    stop_neo4j(f'{NEO4J_CONTAINER_PREFIX}-{name}', check=False)
+    delete_neo4j_volume(f'{NEO4J_CONTAINER_PREFIX}-{name}')
 
 
 @db.command()
@@ -69,8 +76,12 @@ def query(stdin: bool, statement: str) -> None:
 @db.command()
 @click.argument('path')
 def ingest(path: str) -> None:
+    # TODO: start postgres and bloodhoundce-api containers
+    # podman run --name bloodhound-postgres -it --rm --network host -e POSTGRES_USER=bloodhound -e POSTGRES_PASSWORD=bloodhound -e POSTGRES_DATABASE=bloodhound docker.io/library/postgres:13.2
+    # podman run --name bloodhound-api -it --rm --network host -v ./bloodhound.config.json:/bloodhound.config.json docker.io/specterops/bloodhound:latest
+    # ./bloodhound.config.json sample is stored in repo root
     endpoint = os.environ.get('BLOODHOUND_URL') or 'http://localhost:8080'
-    username = os.environ.get('BLOODHOUND_USERNAME') or 'spam@example.com'
+    username = os.environ.get('BLOODHOUND_USERNAME') or click.prompt('username')
     password = os.environ.get('BLOODHOUND_PASSWORD') or click.prompt('password', hide_input=True)
     with requests.Session() as session:
         click.echo('authenticating')
@@ -131,8 +142,12 @@ def start_neo4j(name: str) -> None:
     subprocess.run(['podman', 'container', 'logs', '--follow', '--until', timestamp, container_id], check=True, capture_output=False)
 
 
-def stop_neo4j(name: str) -> None:
-    subprocess.run(['podman', 'container', 'stop', name], check=True, capture_output=False)
+def stop_neo4j(name: str, check: bool = False) -> None:
+    subprocess.run(['podman', 'container', 'stop', name], check=check, capture_output=True)
+
+
+def delete_neo4j_volume(name: str) -> None:
+    subprocess.run(['podman', 'volume', 'rm', name], check=False, capture_output=True)
 
 
 def exec_and_print(statement: str, **parameters: Any):
@@ -145,7 +160,7 @@ def exec_and_print(statement: str, **parameters: Any):
 
 
 def execute(statement: str, **parameters: Any) -> list[Any]:
-    response = requests.post(f'{ENDPOINT}/db/neo4j/tx/commit', json=dict(statements=[dict(statement=statement, parameters=parameters)]), auth=HTTPBasicAuth(USERNAME, PASSWORD))
+    response = requests.post(f'{NEO4J_URL}/db/neo4j/tx/commit', json=dict(statements=[dict(statement=statement, parameters=parameters)]), auth=HTTPBasicAuth(NEO4J_USERNAME, NEO4J_PASSWORD))
     body = response.json()
     if body['errors']:
         raise RuntimeError('\n'.join(error['message'] for error in body['errors']))
@@ -160,7 +175,7 @@ def execute(statement: str, **parameters: Any) -> list[Any]:
 @db.command()
 def generate_wordlist() -> None:
     words = set()
-    for line in execute('MATCH (o) WHERE o:User OR o:Computer RETURN o.samaccountname AS line UNION MATCH (o) WHERE o:Group OR o:OU RETURN left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
+    for line in execute('MATCH (o) WHERE (o:User OR o:Computer OR o:Group) AND o.samaccountname IS NOT NULL RETURN o.samaccountname AS line UNION MATCH (o) WHERE (o:OU OR o:Domain) AND o.name IS NOT NULL AND o.domain IS NOT NULL AND size(o.name) > size(o.domain) RETURN DISTINCT left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
         if not line:
             continue
         if line.endswith('$'):
