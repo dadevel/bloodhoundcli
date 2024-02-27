@@ -1,3 +1,4 @@
+from pathlib import Path
 import re
 import subprocess
 import sys
@@ -13,27 +14,36 @@ def hashcat() -> None:
 
 
 @hashcat.command()
+@click.argument('hashfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path))
+@click.argument('potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.pot')
 @click.argument('mode', type=int)
-@click.argument('hashfile')
 @click.argument('args', nargs=-1)
-def crack(mode: int, hashfile: str, args: str) -> None:
-    run_hashcat(mode, hashfile, *args)
+def crack(hashfile: Path, potfile: Path, mode: int, args: list[str]) -> None:
+    run_hashcat(hashfile, potfile, mode, args)
 
 
-def run_hashcat(mode: int, hashfile: str, *args: str, capture: bool = False) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        [
-            'hashcat',
-            '-m', str(mode),
-            '--potfile-path', f'{hashfile}.potfile',
-            '--restore-file-path', f'{hashfile}.restore',
-            hashfile,
-            *args,
-        ],
-        check=False,
-        capture_output=capture,
-        text=True,
-    )
+@hashcat.command()
+@click.argument('hashfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path))
+@click.argument('potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.pot')
+@click.argument('mode', type=int)
+def show(hashfile: Path, potfile: Path, mode: int) -> None:
+    process = run_hashcat(hashfile, potfile, mode, args=['--show'])
+    for line in process.stdout:
+        sys.stdout.write(decode_inplace(line.rstrip()))
+        sys.stdout.write('\n')
+
+
+def run_hashcat(hashfile: Path, potfile: Path, mode: int, args: list[str], capture: bool = False) -> subprocess.CompletedProcess:
+    command = [
+        'hashcat',
+        '-m', str(mode),
+        '--potfile-path', potfile,
+        '--restore-file-path', potfile.parent/f'{potfile.name}.restore',
+        hashfile,
+        *args,
+    ]
+    click.echo(f'runnig command: {" ".join(str(x) for x in command)}')
+    return subprocess.run(command, check=False, capture_output=capture, text=True)
 
 
 @hashcat.command()
