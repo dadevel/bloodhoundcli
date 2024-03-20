@@ -2,17 +2,13 @@ import sqlite3
 
 import click
 
-from bloodhoundcli.db import Database
+from bloodhoundcli.neo4j import Database
 from bloodhoundcli.util import nthash, md5
 
-@click.group()
-def netexec() -> None:
-    pass
 
-
-@netexec.command('import')
+@click.command(help='Import local admin data from NetExec smb.db')
 @click.argument('smbdb')
-def import_(smbdb: str) -> None:
+def import_netexec(smbdb: str) -> None:
     neo4j = Database.from_env()
     neo4j.create_indices()
     with sqlite3.connect(smbdb) as nxcdb:

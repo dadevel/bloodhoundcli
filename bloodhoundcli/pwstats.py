@@ -1,9 +1,9 @@
-from bloodhoundcli.db import Database
+from bloodhoundcli.neo4j import Database
 
 import click
 
 
-@click.command()
+@click.command(help='Print basic statistics about cracked passwords')
 def pwstats() -> None:
     neo4j = Database.from_env()
 

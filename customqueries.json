@@ -1,17 +1,17 @@
 {
   "queries": [
     {
-      "name": "Next steps from owned (3 hops)",
+      "name": "Best paths from owned (unlimited)",
       "category": "Paths",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((a {owned: true})-[*1..3]->(b)) WHERE a<>b RETURN p"
+          "query": "MATCH (a {owned: true}) MATCH (b) CALL apoc.algo.dijkstra(a, b, '>', 'cost') YIELD path RETURN path"
         }
       ]
     },
     {
-      "name": "Next steps from owned (5 hops)",
+      "name": "Shortest paths from owned (5 hops)",
       "category": "Paths",
       "queryList": [
         {
@@ -21,17 +21,7 @@
       ]
     },
     {
-      "name": "All next steps from owned (3 hops)",
-      "category": "Paths",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (a {owned: true})-[*1..3]->(b) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "All next steps from owned (5 hops)",
+      "name": "All paths from owned (5 hops)",
       "category": "Paths",
       "queryList": [
         {
@@ -41,7 +31,17 @@
       ]
     },
     {
-      "name": "Paths from owned to high value targets (5 hops)",
+      "name": "Best paths from owned to valuable targets (unlimited)",
+      "category": "Paths",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a {owned: true}) MATCH (b {highvalue: true}) CALL apoc.algo.dijkstra(a, b, '>', 'cost') YIELD path RETURN path"
+        }
+      ]
+    },
+    {
+      "name": "Shortest paths from owned to valuable targets (5 hops)",
       "category": "Paths",
       "queryList": [
         {
@@ -51,12 +51,12 @@
       ]
     },
     {
-      "name": "Paths from owned to high value targets (unlimited)",
+      "name": "All paths from owned to valuable targets (5 hops)",
       "category": "Paths",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((a {owned: true})-[*1..]->(b {highvalue: true})) WHERE a<>b RETURN p"
+          "query": "MATCH p = (a {owned: true})-[*1..5]->(b {highvalue: true}) RETURN p"
         }
       ]
     },
@@ -66,7 +66,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (a)-[:Contains*1..]->({highvalue: true}) WHERE (a:Domain or a:AZTenant) RETURN p UNION MATCH (p {highvalue: true}) RETURN p"
+          "query": "MATCH p = (a)-[:Contains|AZContains*1..]->({highvalue: true}) WHERE (a:Domain OR a:AZTenant) RETURN p UNION MATCH (p {highvalue: true}) RETURN p"
         }
       ]
     },
@@ -76,7 +76,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (a)-[:Contains|AZContains*1..]->({owned: true}) WHERE (a:Domain OR a:AZTenant) RETURN p"
+          "query": "MATCH p = (a)-[:Contains|AZContains*1..]->({owned: true}) WHERE (a:Domain OR a:AZTenant) RETURN p UNION MATCH (p {owned: true}) RETURN p"
         }
       ]
     },
@@ -1271,7 +1271,27 @@
       ]
     },
     {
-      "name": "Mark active computers without LAPS as valuable (5 hops)",
+      "name": "Tag MSOL accounts as T0",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User) WHERE u.name STARTS WITH 'MSOL_' SET u.tier=0 RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Mark objects with direct paths to T0 as valuable",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[]->(b {tier: 0}) WHERE coalesce(a.tier, 2)<>0 SET a.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark active computers without LAPS as valuable",
       "category": "AD Tiering",
       "queryList": [
         {
@@ -1281,12 +1301,22 @@
       ]
     },
     {
+      "name": "Potentially interesting users and computers",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND any(x IN ['vmware', 'vcenter', 'vsphere', 'veeam', 'arcserve', 'commvault', 'backup', 'back', 'bak', 'bck', 'adm', 'admin', 'support', 'helpdesk', 'it', 'join', 'setup', 'inst', 'deploy', 'pki', 'ca', 'sccm'] WHERE toLower(o.samaccountname) CONTAINS x OR toLower(o.description) CONTAINS x) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Show Tier 0",
       "category": "AD Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(y {tier: 0}) RETURN p UNION MATCH (p {tier: 0}) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->({tier: 0}) RETURN p UNION MATCH (p {tier: 0}) RETURN p"
         }
       ]
     },
@@ -1361,7 +1391,7 @@
       ]
     },
     {
-      "name": "Mark service principals with valueable MS Graph app role assignments",
+      "name": "Mark service principals with privileged MS Graph app role assignments",
       "category": "Azure Tiering",
       "queryList": [
         {
@@ -1417,6 +1447,26 @@
         {
           "final": true,
           "query": "MATCH p = (n)-[:AZOwns]->(:AZApp) SET n.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark objects with direct control over the tenant as valueable (e.g. AZMGGrantAppRoles)",
+      "category": "Azure Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[]->(:AZTenant) SET a.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Show Tier 0",
+      "category": "Azure Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:AZTenant)-[:AZContains*1..]->({tier: 0}) RETURN p UNION MATCH (p {tier: 0}) RETURN p"
         }
       ]
     },
@@ -1536,7 +1586,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((a {usertype:'Guest'})-[*1..3]->(b {highvalue: true})) WHERE a<>b RETURN p"
+          "query": "MATCH p = shortestPath((a:AZUser {enabled: true, usertype:'Guest'})-[*1..3]->(b {highvalue: true})) WHERE a<>b RETURN p"
         }
       ]
     },
@@ -1546,7 +1596,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (a:AZServicePrincipal)-[]->(b:AZServicePrincipal) WHERE b.name STARTS WITH 'MICROSOFT GRAPH@' RETURN p"
+          "query": "MATCH p = (:AZServicePrincipal {enabled: true})-[]->(:AZServicePrincipal {appdisplayname: 'Microsoft Graph'}) RETURN p"
         }
       ]
     },
@@ -1556,7 +1606,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[:AZAddOwner|AZAddSecret|AZAppAdmin|AZCloudAppAdmin|AZMGAddOwner|AZMGAddSecret|AZOwns]->(g:AZServicePrincipal {appdisplayname: \"Microsoft Graph\"}) RETURN p"
+          "query": "MATCH p = ()-[:AZAddOwner|AZAddSecret|AZAppAdmin|AZCloudAppAdmin|AZMGAddOwner|AZMGAddSecret|AZOwns]->(:AZServicePrincipal {appdisplayname: 'Microsoft Graph'}) RETURN p"
         }
       ]
     },
@@ -1566,37 +1616,27 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (n) WHERE NOT n.displayname='Microsoft Graph' WITH n MATCH p = shortestPath((n)-[*1..10]->(g:AZServicePrincipal {appdisplayname: 'Microsoft Graph'})) WHERE n<>g RETURN p"
+          "query": "MATCH p = shortestPath((n)-[*1..10]->(g:AZServicePrincipal {appdisplayname: 'Microsoft Graph'})) WHERE n<>g RETURN p"
         }
       ]
     },
     {
-      "name": "Shortest path from owned users to service principals",
+      "name": "Shortest path from users to service principals (10 hops)",
       "category": "Azure Managed Identity",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:AZUser {owned: true}), (m:AZServicePrincipal) MATCH p = shortestPath((u)-[*..]->(m)) RETURN p"
+          "query": "MATCH p = shortestPath((:AZUser {enabled: true})-[*1..10]->(:AZServicePrincipal {enabled: true})) RETURN p"
         }
       ]
     },
     {
-      "name": "Shortest path from owned users to managed identities",
+      "name": "Shortest path from users to managed identities (10 hops)",
       "category": "Azure Managed Identity",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:AZUser {owned: true}), (m:AZServicePrincipal {serviceprincipaltype: 'ManagedIdentity'}) MATCH p = shortestPath((u)-[*..]->(m)) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Shortest path from all users to managed identities",
-      "category": "Azure Managed Identity",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (u:AZUser), (m:AZServicePrincipal {serviceprincipaltype: 'ManagedIdentity'}) MATCH p = shortestPath((u)-[*..]->(m)) RETURN p"
+          "query": "MATCH p = shortestPath((:AZUser {enabled: true})-[*1..10]->(:AZServicePrincipal {enabled: true, serviceprincipaltype: 'ManagedIdentity'})) RETURN p"
         }
       ]
     },
@@ -1606,7 +1646,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (sp:AZServicePrincipal) RETURN sp"
+          "query": "MATCH p = (:AZTenant)-[:AZContains*1..]->(:AZServicePrincipal {enabled: true}) RETURN p"
         }
       ]
     },
@@ -1616,7 +1656,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (sp:AZServicePrincipal {serviceprincipaltype: 'ManagedIdentity'}) RETURN sp"
+          "query": "MATCH p = (:AZTenant)-[:AZContains*1..]->(:AZServicePrincipal {enabled: true, serviceprincipaltype: 'ManagedIdentity'}) RETURN p"
         }
       ]
     },
@@ -1626,7 +1666,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (u {onpremsyncenabled: true})-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole) WHERE r.highvalue RETURN p"
+          "query": "MATCH p = (u:AZUser {enabled: true, onpremsyncenabled: true})-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole {highvalue: true}) RETURN p"
 
         }
       ]
@@ -1637,7 +1677,17 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((u:AZUser {onpremsyncenabled: true})-[r*1..10]->(n {highvalue: true})) WHERE u<>n RETURN p"
+          "query": "MATCH p = shortestPath((u:AZUser {enabled: true, onpremsyncenabled: true})-[*1..10]->(n {highvalue: true})) WHERE u<>n RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Guests synced from on-prem",
+      "category": "Azure Synchronization",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:AZTenant)-[:AZContains*1..]->(u:AZUser {enabled: true, onpremsyncenabled: true, usertype: 'Guest'}) RETURN p"
         }
       ]
     },
@@ -1647,7 +1697,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u {onpremsyncenabled: true}) RETURN u"
+          "query": "MATCH p = (:AZTenant)-[:AZContains*1..]->(u:AZUser {enabled: true, onpremsyncenabled: true, usertype: 'Member'}) RETURN p"
         }
       ]
     },
@@ -1657,7 +1707,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (g:AZGroup {onpremsyncenabled: true}) RETURN g"
+          "query": "MATCH p = (:AZTenant)-[:AZContains*1..]->(g:AZGroup {onpremsyncenabled: true}) RETURN p"
         }
       ]
     },
@@ -1667,7 +1717,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User {enabled: true}) WHERE toUpper(u.name) STARTS WITH 'MSOL_' RETURN u UNION MATCH (u:AZUser) WHERE toUpper(u.userprincipalname) STARTS WITH 'SYNC_' RETURN u"
+          "query": "MATCH (u:User {enabled: true}) WHERE toUpper(u.name) STARTS WITH 'MSOL_' RETURN u UNION MATCH (u:AZUser {enabled: true}) WHERE toUpper(u.userprincipalname) STARTS WITH 'SYNC_' RETURN u"
         }
       ]
     }

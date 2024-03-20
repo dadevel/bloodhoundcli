@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Generator
 import json
 import os
+import shlex
 import subprocess
 import sys
 import time
@@ -10,6 +11,11 @@ import time
 from requests.auth import HTTPBasicAuth
 import click
 import requests
+
+NEO4J_CONTAINER_PREFIX = 'bloodhound'
+NEO4J_URL = os.environ.get('NEO4J_URL') or 'http://localhost:7474'
+NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
+NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD') or ''
 
 
 class Database:
@@ -49,11 +55,7 @@ class Database:
 
     @classmethod
     def from_env(cls) -> Database:
-        return cls(
-            os.environ.get('NEO4J_URL') or 'http://localhost:7474',
-            os.environ.get('NEO4J_USERNAME') or 'neo4j',
-            os.environ.get('NEO4J_PASSWORD') or 'neo4j',
-        )
+        return cls(NEO4J_URL, NEO4J_USERNAME, NEO4J_PASSWORD)
 
     def execute(self, statement: str, **parameters: Any) -> list[Any]:
         response = requests.post(
@@ -95,21 +97,55 @@ class Database:
 
 
 class DatabaseManager:
-    NEO4J_CONTAINER_PREFIX = 'bloodhound'
+    @classmethod
+    def get_status(cls, name: str) -> str:
+        # valid status values: created, exited, paused, running, unknown
+        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
+        process = subprocess.run(['podman', 'container', 'inspect', container_name], check=False, capture_output=True, text=True)
+        if process.returncode != 0:
+            return 'inexistent'
+        entries = json.loads(process.stdout)
+        assert len(entries) == 1
+        return entries[0]['State']['Status']
 
     @classmethod
-    def create(cls, name: str, bolthost: str = '127.0.0.1:7474', webhost: str = '127.0.0.1:7687', username: str = 'neo4j', password: str = '') -> dict[str, str]:
-        container_name = f'{cls.NEO4J_CONTAINER_PREFIX}-{name}'
+    def get_instances(cls) -> Generator[tuple[str, str], None, None]:
+        prefix = f'{NEO4J_CONTAINER_PREFIX}-'
+        process = subprocess.run(['podman', 'ps', '--all', '--format', 'json'], check=True, capture_output=True, text=True)
+        for container in json.loads(process.stdout):
+            for container_name in container['Names']:
+                if container_name.startswith(prefix):
+                    yield container_name.removeprefix(prefix), container['State']
+
+    @classmethod
+    def get_env_config(cls) -> dict[str, str]:
+        return dict(NEO4J_URL=NEO4J_URL, NEO4J_USERNAME=NEO4J_USERNAME, NEO4J_PASSWORD=NEO4J_PASSWORD)
+
+    @classmethod
+    def setup(cls, name: str) -> dict[str, str]:
+        for instance, status in cls.get_instances():
+            if instance != name and status == 'running':
+                cls.stop(instance)
+        status = cls.get_status(name)
+        if status == 'inexistent':
+            cls.create(name)
+        if status != 'running':
+            cls.start(name)
+        return cls.get_env_config()
+
+    @classmethod
+    def create(cls, name: str) -> None:
+        print(f'creating {name}')
+        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
         # NEO4J_PLUGINS/NEO4JLABS_PLUGINS threw errors, instead the gds plugin was directly built into the image
         process = subprocess.run(
             [
-                'podman', 'run',
+                'podman', 'create',
                 '--name', container_name,
-                '--detach',
                 #'--rm',
-                '--publish', f'{bolthost}:7474',
-                '--publish', f'{webhost}:7687',
-                '--env', f'NEO4J_AUTH={username}/{password}' if username and password else 'NEO4J_AUTH=none',
+                '--publish', f'127.0.0.1:7474:7474',
+                '--publish', f'127.0.0.1:7687:7687',
+                '--env', f'NEO4J_AUTH={NEO4J_USERNAME}/{NEO4J_PASSWORD}' if NEO4J_USERNAME and NEO4J_PASSWORD else 'NEO4J_AUTH=none',
                 #'--volume', f'{name}:/data',
                 'ghcr.io/dadevel/neo4j:4.4.12',
             ],
@@ -118,83 +154,49 @@ class DatabaseManager:
             text=True,
         )
         container_id = process.stdout.strip()
-        timestamp = (datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(seconds=15)).isoformat()
+        timestamp = (datetime.now(tz=timezone.utc) + timedelta(seconds=15)).isoformat()
         subprocess.run(['podman', 'container', 'logs', '--follow', '--until', timestamp, container_id], check=True, capture_output=False)
-        return dict(NEO4J_URL=f'http://{bolthost}', NEO4J_USERNAME=username, NEO4J_PASSWORD=password)
 
     @classmethod
-    def destroy(cls, name: str) -> None:
-        container_name = f'{cls.NEO4J_CONTAINER_PREFIX}-{name}'
-        subprocess.run(['podman', 'container', 'rm', '-f', container_name], check=True, capture_output=True, text=True)
+    def remove(cls, name: str) -> None:
+        print(f'removing {name}')
+        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
+        subprocess.run(['podman', 'container', 'rm', '-f', container_name], check=True, capture_output=False)
 
     @classmethod
     def start(cls, name: str) -> None:
-        container_name = f'{cls.NEO4J_CONTAINER_PREFIX}-{name}'
-        subprocess.run(['podman', 'container', 'start', container_name], check=True, capture_output=True, text=True)
+        print(f'starting {name}')
+        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
+        subprocess.run(['podman', 'container', 'start', container_name], check=True, capture_output=False)
 
     @classmethod
     def stop(cls, name: str) -> None:
-        container_name = f'{cls.NEO4J_CONTAINER_PREFIX}-{name}'
-        subprocess.run(['podman', 'container', 'stop', container_name], check=True, capture_output=True, text=True)
-
-    @classmethod
-    def instances(cls) -> Generator[tuple[str, str], None, None]:
-        prefix = f'{cls.NEO4J_CONTAINER_PREFIX}-'
-        process = subprocess.run(['podman', 'ps', '--all', '--format', 'json'], check=True, capture_output=True, text=True)
-        for container in json.loads(process.stdout):
-            for container_name in container['Names']:
-                if container_name.startswith(prefix):
-                    yield container_name.removeprefix(prefix), container['State']
+        print(f'stopping {name}')
+        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
+        subprocess.run(['podman', 'container', 'stop', container_name], check=True, capture_output=False)
 
 
-@click.group()
-def db() -> None:
-    pass
 
-
-@db.command(name='list')
-def list_() -> None:
-    for name, state in DatabaseManager.instances():
+@click.command('list', help='List Neo4j containers')
+def neo4j_list() -> None:
+    for name, state in DatabaseManager.get_instances():
         click.echo(f'{name} {state}')
 
 
-@db.command()
+@click.command('setup', help='Stop other containers, then run the given container')
 @click.argument('name')
-def create(name: str) -> None:
-    opts = DatabaseManager.create(name)
-    click.echo('\n'.join(f'{key}={value}' for key, value in opts.items()))
+def neo4j_setup(name: str) -> None:
+    env_vars = DatabaseManager.setup(name)
+    click.echo('\n'.join(f'{key}={shlex.quote(value)}' for key, value in env_vars.items()))
 
 
-@db.command()
+@click.command('delete', help='Remove Neo4j container')
 @click.argument('name')
-def destroy(name: str) -> None:
-    DatabaseManager.destroy(name)
+def neo4j_delete(name: str) -> None:
+    DatabaseManager.remove(name)
 
 
-@db.command()
-@click.argument('name')
-def start(name: str) -> None:
-    DatabaseManager.start(name)
-
-
-@db.command()
-@click.argument('name')
-def stop(name: str) -> None:
-    DatabaseManager.stop(name)
-
-
-def print_row(row: Any) -> None:
-    if isinstance(row, (bool, int, float, str)):
-        print(row)
-    else:
-        json.dump(row, sys.stdout, indent=None, sort_keys=False)
-        sys.stdout.write('\n')
-
-
-@db.command()
-@click.argument('statement')
-@click.option('-s', '--stdin', is_flag=True)
-def query(stdin: bool, statement: str) -> None:
+def query(statement: str, stdin: bool) -> None:
     if stdin and not statement:
         raise RuntimeError('invalid arugment combination')
 
@@ -215,9 +217,17 @@ def query(stdin: bool, statement: str) -> None:
         exit(1)
 
 
-@db.command()
+def print_row(row: Any) -> None:
+    if isinstance(row, (bool, int, float, str)):
+        print(row)
+    else:
+        json.dump(row, sys.stdout, indent=None, sort_keys=False)
+        sys.stdout.write('\n')
+
+
+@click.command(help='Import SharpHound/BloodHound.py ZIP')
 @click.argument('path')
-def ingest(path: str) -> None:
+def import_sharphound(path: str) -> None:
     # TODO: start postgres and bloodhoundce-api containers
     # podman run --name bloodhound-postgres -it --rm --network host -e POSTGRES_USER=bloodhound -e POSTGRES_PASSWORD=bloodhound -e POSTGRES_DATABASE=bloodhound docker.io/library/postgres:13.2
     # podman run --name bloodhound-api -it --rm --network host -v ./bloodhound.config.json:/bloodhound.config.json docker.io/specterops/bloodhound:latest
@@ -260,14 +270,14 @@ def ingest(path: str) -> None:
             time.sleep(1)
 
 
-@db.command()
-def enrich() -> None:
+@click.command('enrich', help='Add indices and weights')
+def neo4j_enrich() -> None:
     """Add shared passwords and edge costs."""
     db = Database.from_env()
     db.enrich()
 
 
-@db.command()
+@click.command(help='Print wordlist based on object names and descriptions')
 def generate_wordlist() -> None:
     db = Database.from_env()
     words = set()

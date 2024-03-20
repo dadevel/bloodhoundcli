@@ -3,7 +3,7 @@ import sys
 
 import click
 
-from bloodhoundcli import db
+from bloodhoundcli.neo4j import Database
 
 LOGON_TYPE_TABLE = {
     0: 'system',
@@ -23,17 +23,13 @@ LOGON_TYPE_TABLE = {
 }
 
 
-@click.group()
-def winevent() -> None:
-    pass
-
-
-@winevent.command('import')
+@click.command(help='Import JSON file containing logon events')
 @click.argument('eventfile', default='-')
-def import_(eventfile: str) -> None:
+def import_winevents(eventfile: str) -> None:
     file = sys.stdin if eventfile == '-' else open(eventfile)
     with file:
         events = json.load(file)
+    db = Database.from_env()
     for event in events:
         authpkg = event.get('authenticationpackage')
         if authpkg:

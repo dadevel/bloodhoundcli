@@ -1,71 +1,22 @@
 from collections import defaultdict
 from pathlib import Path
 from typing import TextIO, TypedDict
-from tempfile import NamedTemporaryFile
 import re
 import sys
 
 import click
 
-from bloodhoundcli.hashcat import run_hashcat, decode_password
-from bloodhoundcli.db import Database
+from bloodhoundcli.hashcat import decode_password
+from bloodhoundcli.neo4j import Database
 from bloodhoundcli.util import nthash
 
 DOMAIN_PATTERN = re.compile(r'^[a-z0-9.-]+$')
 
 
-@click.group()
-def ntds() -> None:
-    pass
-
-
-@ntds.command()
+@click.command(help='Import hashes and cracked passwords from DCSync')
 @click.argument('ntds', type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path), nargs=-1)
 @click.option('-p', '--potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.pot')
-@click.option('-t', '--task', nargs=2, multiple=True)
-@click.option('--pre2k', is_flag=True, default=True)
-@click.option('--lmbrute', is_flag=True, default=True)
-def crack(ntds: list[str], potfile: Path, task: list[tuple[str, str]], pre2k: bool, lmbrute: bool) -> None:
-    with NamedTemporaryFile('w', prefix='hashcat-', suffix='.txt') as userlist, NamedTemporaryFile('w', prefix='hashcat-', suffix='.txt') as lmlist, NamedTemporaryFile('w', prefix='hashcat-', suffix='.txt') as computerlist, NamedTemporaryFile('w', prefix='hashcat-', suffix='.txt') as pre2klist:
-        for path in ntds:
-            click.echo(f'parsing ntds {path}')
-            with open(path, 'r') as input:
-                for line in input:
-                    identity, _, lmhash, nthash, *_ = line.split(':')
-                    if identity.endswith('$'):
-                        computerlist.write(nthash)
-                        computerlist.write('\n')
-                    else:
-                        userlist.write(nthash)
-                        userlist.write('\n')
-                        lmlist.write(lmhash)
-                        lmlist.write('\n')
-
-        potfile.parent.mkdir(exist_ok=True)
-
-        if pre2k:
-            neo4j = Database.from_env()
-            for name in neo4j.execute('MATCH (c:Computer {enabled: true}) WHERE c.lastlogon=0 OR c.lastlogon IS NULL RETURN toLower(c.samaccountname)'):
-                name = name.removesuffix('$')
-                name = name[:14]
-                pre2klist.write(name)
-                pre2klist.write('\n')
-            click.echo('cracking pre2k computer hashes')
-            run_hashcat(hashfile=Path(computerlist.name), potfile=potfile, mode=1000, args=[pre2klist.name, '-O', '-w', '3', '-a', '0'])
-
-        if lmbrute:
-            click.echo('cracking user lm hashes')
-            run_hashcat(hashfile=Path(lmlist.name), potfile=potfile, mode=3000, args=['--increment', '--increment-min', '1', '-1', '?d?u !#$%*+-??@_.', '?1?1?1?1?1?1?1', '-w', '3', '-a', '3'])
-
-        click.echo('cracking user nt hashes')
-        for wordlist, ruleset in task:
-            run_hashcat(hashfile=Path(userlist.name), potfile=potfile, mode=1000, args=[wordlist, '-r', ruleset, '-O', '-w', '3', '-a', '0', '--loopback'])
-
-
-@ntds.command('import')
-@click.argument('ntds', type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path), nargs=-1)
-@click.option('-p', '--potfile', type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path))
-def import_(ntds: list[Path], potfile: Path) -> None:
+def import_ntds(ntds: list[Path], potfile: Path) -> None:
     neo4j = Database.from_env()
     neo4j.create_indices()
 
@@ -90,7 +41,7 @@ def import_(ntds: list[Path], potfile: Path) -> None:
             ntdsdb = parse_ntds(file)
         print(f'loaded {len(ntdsdb)} hashes for {domain} from {path}', file=sys.stderr)
         if ntdsdb:
-            import_ntds(neo4j, domain, ntdsdb)
+            import_ntds_internal(neo4j, domain, ntdsdb)
         if ntdsdb and potdb:
             import_potfile(neo4j, domain, ntdsdb, potdb)
         # TODO: import kerberos keys into neo4j
@@ -122,7 +73,7 @@ def import_ntds_cleartext(neo4j: Database, domain: str, cleardb: dict[str, str])
     print(f'updated {count} credential relationships')
 
 
-def import_ntds(neo4j: Database, domain: str, ntdsdb: dict[str, list[NtdsEntry]]) -> None:
+def import_ntds_internal(neo4j: Database, domain: str, ntdsdb: dict[str, list[NtdsEntry]]) -> None:
     count = sum(neo4j.execute(
         'UNWIND $rows AS row MERGE (c:Base:Container:Credential {objectid: row[0]}) SET c.nthash=row[0], c.lmhash=row[1], c.name=row[2] RETURN count(c)',
         rows=[
@@ -200,11 +151,10 @@ def parse_potfile(file: TextIO) -> dict[str, str]:
     """Returns mapping from nthash to password."""
     pattern = re.compile(r'^([^\:]{32}?):(.*?)$')
     result = dict()
-    for linenum, line in enumerate(file, start=1):
+    for line in file:
         line = line.rstrip()
         match = pattern.search(line)
         if not match:
-            print(f'{file.name}:{linenum}: invalid line: {line}', file=sys.stderr)
             continue
         nthash, password = match.groups()
         result[nthash] = decode_password(password)
