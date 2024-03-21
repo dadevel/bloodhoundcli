@@ -53,6 +53,10 @@ bloodhoundcli generate-wordlist > ./custom-words.txt  # made of usernames, descr
 bloodhoundcli hashcat-ntds -t ./clem9669-wordlists/dictionnaire_de ./clem9669-hashcat-rules/clem9669_medium.rule -t ./custom-words.txt ./unicorn-hashcat-rules/unicorn\ rules/SuperUnicorn.rule -t ./weakpass-3.txt ./unicorn-hashcat-rules/unicorn\ rules/Unicorn250.rule -p ./hashcat.potfile ./*.ntds
 ~~~
 
+> **Note:**
+> `bloodhoundcli` assumes that the name of the NTDS file minus the `.ntds` suffix is the FQDN of the domain.
+> This means a DCSync from `dc01.subdomain.corp.local` should be named `subdomain.corp.local.ntds`.
+
 Import the DCSync output and Hashcat potfile into BloodHound (inspired by [@knavesec](https://github.com/knavesec/max) and [@syss-research](https://github.com/syss-research/hashcathelper)).
 This adds `Credential` objects with `nthash`, `lmhash` and `password` properties and `HasCredential` as well as `AssignedTo` edges between users and credentials.
 
