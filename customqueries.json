@@ -1246,7 +1246,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) OR any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) OR any(y IN ['DnsAdmins'] WHERE x.name STARTS WITH toUpper(y + '@')) SET x.tier=0, x.highvalue=true RETURN x"
+          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) OR any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) OR any(y IN ['DnsAdmins', 'DHCP ADMINISTRATORS'] WHERE x.name STARTS WITH toUpper(y + '@')) SET x.tier=0, x.highvalue=true RETURN x"
         }
       ]
     },
