@@ -56,7 +56,7 @@ class NtdsEntry(TypedDict):
 
 def import_ntds_cleartext(neo4j: Database, domain: str, cleardb: dict[str, str]) -> None:
     count = sum(neo4j.execute(
-        'UNWIND $rows AS row MERGE (c:Base:Container:Credential {objectid: row[0]}) SET u.nthash=row[0], u.password=row[1], u.cracked=false, u.name=row[2] RETURN count(c)',
+        'UNWIND $rows AS row MERGE (c:Base:Container:Credential {objectid: row[0]}) SET c.nthash=row[0], c.password=row[1], c.cracked=false, c.name=row[2] RETURN count(c)',
         rows=[
             [nthash(password), password, 'Plain Password']
             for password in cleardb.values()
