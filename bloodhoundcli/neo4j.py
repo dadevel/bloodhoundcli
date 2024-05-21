@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Generator
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -16,6 +17,7 @@ NEO4J_CONTAINER_PREFIX = 'bloodhound'
 NEO4J_URL = os.environ.get('NEO4J_URL') or 'http://localhost:7474'
 NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
 NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD') or ''
+WORD_SEPARATOR_PATTERN = re.compile(r'[^a-zA-Z0-9]')
 
 
 class Database:
@@ -277,20 +279,54 @@ def neo4j_enrich() -> None:
     db.enrich()
 
 
+def generate_words(value: str, reverse: bool = False) -> Generator[str, None, None]:
+    value = value.replace('\n', ' ')
+    value = value.replace('\r', ' ')
+    value = value.replace('\t', ' ')
+
+    if reverse:
+        yield value[::-1]
+        yield value.upper()[::-1]
+        yield value.lower()[::-1]
+    else:
+        yield value
+        yield value.lower()
+        yield value.upper()
+
+    # split value into multiple parts, e.g. 'One/Two-Three' would become ['One', 'Two', 'Three']
+    for part in WORD_SEPARATOR_PATTERN.split(value):
+        if not part:
+            continue
+        if reverse:
+            yield part[::-1]
+            yield part.upper()[::-1]
+            yield part.lower()[::-1]
+        else:
+            yield part
+            yield part.lower()
+            yield part.upper()
+
+
 @click.command(help='Print wordlist based on object names and descriptions')
 def generate_wordlist() -> None:
     db = Database.from_env()
     words = set()
+
+    # add names and descriptions of users, computers, groups and OUs
     for line in db.execute('MATCH (o) WHERE (o:User OR o:Computer OR o:Group) AND o.samaccountname IS NOT NULL RETURN o.samaccountname AS line UNION MATCH (o) WHERE (o:OU OR o:Domain) AND o.name IS NOT NULL AND o.domain IS NOT NULL AND size(o.name) > size(o.domain) RETURN DISTINCT left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
         if not line:
             continue
         if line.endswith('$'):
             line = line.rstrip('$')
-        for word in line.split():
-            words.add(word)
-            if word.isupper():
-                words.add(word.lower())
-            else:
-                words.add(word)
+        for part in line.split(' '):
+            words.update(generate_words(part))
+
+    # add reverse username, 'alice' would become 'ecila'
+    for line in db.execute('MATCH (u:User) WHERE u.samaccountname IS NOT NULL RETURN u.samaccountname AS line'):
+        if not line:
+            continue
+        for part in line.split(' '):
+            words.update(generate_words(part, reverse=True))
+
     for word in words:
         print(word)
