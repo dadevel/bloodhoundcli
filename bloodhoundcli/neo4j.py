@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import sys
 import time
+import re
 
 from requests.auth import HTTPBasicAuth
 import click
@@ -277,20 +278,50 @@ def neo4j_enrich() -> None:
     db.enrich()
 
 
+def process_word_for_wordlist(word: str, words: Set[str], add_reverse: bool = False) -> None:
+    # First, add the original string to the wordlist.
+    words.add(word)
+
+    # Split the string into multiple words, if it contains any characters that resemble separators.
+    # For example "One/Two-Three" would become "One", "Two", "Three".
+    separator_pattern = r'[-_.,:;+&%#$/\s\\]'
+    parts = re.split(separator_pattern, word)
+
+    # Treat each part of the splitted string as a word and generate common variants.
+    for part in parts:
+        add_word_variants_to_wordlist(part, words, add_reverse)
+
+
+def add_word_variants_to_wordlist(word: str, words: Set[str], add_reverse: bool = False) -> None:
+    # Add lowercase and uppercase representations of the word.
+    words.add(word.lower())
+    words.add(word.upper())
+
+    # If requested, add a reversed representation of the lowercase word to the wordlist.
+    if add_reverse:
+        words.add(word.lower()[::-1])
+
+
 @click.command(help='Print wordlist based on object names and descriptions')
 def generate_wordlist() -> None:
     db = Database.from_env()
     words = set()
+
     for line in db.execute('MATCH (o) WHERE (o:User OR o:Computer OR o:Group) AND o.samaccountname IS NOT NULL RETURN o.samaccountname AS line UNION MATCH (o) WHERE (o:OU OR o:Domain) AND o.name IS NOT NULL AND o.domain IS NOT NULL AND size(o.name) > size(o.domain) RETURN DISTINCT left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
         if not line:
             continue
         if line.endswith('$'):
             line = line.rstrip('$')
         for word in line.split():
-            words.add(word)
-            if word.isupper():
-                words.add(word.lower())
-            else:
-                words.add(word)
+            # Run the words through some conversions (like splitting, `upper()`, and `lower()`) and add them to the wordlist.
+            process_word_for_wordlist(word, words)
+
+    for line in db.execute('MATCH (o) WHERE (o:User) AND o.samaccountname IS NOT NULL RETURN o.samaccountname AS line'):
+        if not line:
+            continue
+        for word in line.split():
+            # Only for usernames: Also add a reversed representation (for example, "alice" would become "ecila").
+            process_word_for_wordlist(word, words, add_reverse=True)
+
     for word in words:
         print(word)
