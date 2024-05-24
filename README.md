@@ -36,7 +36,7 @@ bloodhoundcli setup project-2  # first container will be stopped
 Execute arbitrary Cypher queries against Neo4j.
 
 ~~~ bash
-bloodhoundcli query 'MATCH (u:User {enabled: true} RETURN u.samaccountname)' > ./users.txt
+bloodhoundcli query 'MATCH (u:User {enabled: true}) RETURN u.samaccountname' > ./users.txt
 bloodhoundcli query -s 'MATCH (u:User {name: toUpper($stdin)} SET u.owned=true RETURN count(u)' << EOF
 john.doe@corp.local
 jane.doe@corp.local
