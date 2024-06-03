@@ -74,9 +74,13 @@ def hashcat_ntds(ntds: list[str], potfile: Path, task: list[tuple[str, str]], pr
 @click.command(help='Print cracked passwords and decode $HEX encoding')
 @click.argument('hashfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path))
 @click.option('-p', '--potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.pot')
+@click.option('--username', is_flag=True)
 @click.argument('mode', type=int)
-def hashcat_decode(hashfile: Path, potfile: Path, mode: int) -> None:
-    process = run_hashcat(hashfile, potfile, mode, args=['--show'], capture=True)
+def hashcat_decode(hashfile: Path, potfile: Path, mode: int, username: bool) -> None:
+    args = ['--show']
+    if username:
+        args.append('--username')
+    process = run_hashcat(hashfile, potfile, mode, args, capture=True)
     for line in process.stdout.splitlines():
         sys.stdout.write(decode_inplace(line.rstrip()))
         sys.stdout.write('\n')

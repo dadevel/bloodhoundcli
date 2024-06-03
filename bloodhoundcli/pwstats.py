@@ -7,6 +7,12 @@ import click
 def pwstats() -> None:
     neo4j = Database.from_env()
 
+    total_users = neo4j.execute('MATCH (u:User {enabled: true}) RETURN count(u)')
+    cracked_users = neo4j.execute('MATCH (:Credential {cracked: true})-[:AssignedTo]->(u:User {enabled: true}) RETURN count(u)')
+    cracked_percentage = round(cracked_users[0] * 100 / total_users[0])
+    print(f'cracked passwords: {cracked_users[0]}/{total_users[0]} ({cracked_percentage}%)')
+    print()
+
     print('most used cracked passwords:')
     for line in neo4j.execute('MATCH p = (c:Credential {cracked: true})-[:AssignedTo]->(u:User {enabled: true}) WITH count(u) AS count, c.password AS password RETURN toString(count) + " " + password ORDER BY count DESC LIMIT 10'):
         print(line)

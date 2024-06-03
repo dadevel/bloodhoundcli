@@ -1,5 +1,4 @@
 from __future__ import annotations
-from datetime import datetime, timedelta, timezone
 from typing import Any, Generator
 import json
 import os
@@ -136,7 +135,7 @@ class DatabaseManager:
         return cls.get_env_config()
 
     @classmethod
-    def create(cls, name: str) -> None:
+    def create(cls, name: str) -> str:
         print(f'creating {name}')
         container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
         # NEO4J_PLUGINS/NEO4JLABS_PLUGINS threw errors, instead the gds plugin was directly built into the image
@@ -156,8 +155,7 @@ class DatabaseManager:
             text=True,
         )
         container_id = process.stdout.strip()
-        timestamp = (datetime.now(tz=timezone.utc) + timedelta(seconds=15)).isoformat()
-        subprocess.run(['podman', 'container', 'logs', '--follow', '--until', timestamp, container_id], check=True, capture_output=False)
+        return container_id
 
     @classmethod
     def remove(cls, name: str) -> None:
@@ -198,7 +196,7 @@ def neo4j_delete(name: str) -> None:
     DatabaseManager.remove(name)
 
 
-def query(statement: str, stdin: bool) -> None:
+def query(statement: str, stdin: bool, parse_json: bool) -> None:
     if stdin and not statement:
         raise RuntimeError('invalid arugment combination')
 
@@ -209,7 +207,11 @@ def query(statement: str, stdin: bool) -> None:
     try:
         if stdin:
             for line in sys.stdin:
-                for row in db.execute(statement, stdin=line.rstrip()):
+                if parse_json:
+                    line = json.loads(line)
+                else:
+                    line = line.rstrip()
+                for row in db.execute(statement, stdin=line):
                     print_row(row)
         else:
             for row in db.execute(statement):

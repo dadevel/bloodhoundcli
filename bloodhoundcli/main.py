@@ -11,8 +11,9 @@ def main() -> None:
 @main.command(help='Execute Cypher statement')
 @click.argument('statement')
 @click.option('-s', '--stdin', is_flag=True)
-def query(statement: str, stdin: bool) -> None:
-    neo4j.query(statement, stdin)
+@click.option('-j', '--jsonl', is_flag=True)
+def query(statement: str, stdin: bool, jsonl: bool) -> None:
+    neo4j.query(statement, stdin, jsonl)
 
 
 main.add_command(neo4j.neo4j_list)

@@ -143,7 +143,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (u:User {enabled: true})-[:MemberOf*1..3]->(g:Group) WHERE (NOT u.highvalue AND toUpper(u.name) CONTAINS 'adm') OR (NOT g.highvalue AND toUpper(g.name) CONTAINS 'ADM') RETURN p"
+          "query": "MATCH p = (u:User {enabled: true})-[:MemberOf*1..3]->(g:Group) WHERE (NOT u.highvalue AND toUpper(u.name) CONTAINS 'ADM') OR (NOT g.highvalue AND toUpper(g.name) CONTAINS 'ADM') RETURN p"
         }
       ]
     },
@@ -188,7 +188,7 @@
       ]
     },
     {
-      "name": "Direct paths to ESC1 templates excluding tier 0",
+      "name": "Direct paths to ESC1 templates excluding T0",
       "category": "ADCS",
       "queryList": [
         {
@@ -198,7 +198,7 @@
       ]
     },
     {
-      "name": "Direct paths to ESC2 templates excluding tier 0",
+      "name": "Direct paths to ESC2 templates excluding T0",
       "category": "ADCS",
       "queryList": [
         {
@@ -208,7 +208,7 @@
       ]
     },
     {
-      "name": "Direct paths to ESC3 templates excluding tier 0",
+      "name": "Direct paths to ESC3 templates excluding T0",
       "category": "ADCS",
       "queryList": [
         {
@@ -218,7 +218,7 @@
       ]
     },
     {
-      "name": "Direct paths to ESC4 templates excluding tier 0",
+      "name": "Direct paths to ESC4 templates excluding T0",
       "category": "ADCS",
       "queryList": [
         {
@@ -298,7 +298,7 @@
       ]
     },
     {
-      "name": "Paths from unprivileged groups to valueable targets (3 hops)",
+      "name": "Paths from standard groups to valueable targets (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
@@ -308,7 +308,7 @@
       ]
     },
     {
-      "name": "Paths from unprivileged groups (3 hops)",
+      "name": "Paths from standard groups (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
@@ -318,112 +318,102 @@
       ]
     },
     {
-      "name": "Paths from non-valueable users to valueable targets (3 hops)",
+      "name": "Paths from regular users to valueable targets (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[*1..3]->({highvalue: true}) RETURN p"
+          "query": "MATCH p = (o)-[*1..3]->({highvalue: true}) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Paths from non-valueable users (3 hops)",
+      "name": "Regular users with local admin rights (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[*1..3]->() RETURN p"
+          "query": "MATCH p = (o)-[:AdminTo|MemberOf*1..3]->(:Computer {enabled: true}) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Non-valueable users with local admin rights (5 hops)",
+      "name": "Regular users with local execution rights (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:AdminTo|MemberOf*1..5]->(:Computer {enabled: true}) RETURN p"
+          "query": "MATCH p = (o)-[:AdminTo|CanRDP|ExecuteDCOM|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|WriteAccountRestrictions|MemberOf*1..3]->(:Computer {enabled: true}) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Non-valueable users with local execution rights (5 hops)",
+      "name": "Regular users with LAPS access (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:AdminTo|CanRDP|ExecuteDCOM|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|WriteAccountRestrictions|MemberOf*1..5]->(:Computer {enabled: true}) RETURN p"
+          "query": "MATCH p = (o)-[:AdminTo|CanRDP|ExecuteDCOM|GenericAll|GenericWrite|Owns|WriteDacl|WriteOwner|WriteAccountRestrictions|MemberOf*1..3]->(:Computer {enabled: true}) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Non-valueable LAPS readers (5 hops)",
+      "name": "Regular users with gMSA access (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:ReadLAPSPassword|SyncLAPSPassword|GenericAll|AllExtendedRights|MemberOf*1..5]->(:Computer {enabled: true, haslaps: true}) RETURN p"
+          "query": "MATCH p = (o)-[:ReadGMSAPassword|MemberOf*1..3]->(:User {enabled: true}) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Non-valueable gMSA readers (5 hops)",
+      "name": "Regular users with DCSync rights (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:ReadGMSAPassword|MemberOf*1..5]->(:User {enabled: true}) RETURN p"
+          "query": "MATCH p = (o)-[:DCSync|AllExtendedRights|GenericAll|MemberOf*1..3]->(:Domain) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Non-valueable users with DCSync rights (5 hops)",
+      "name": "Regular users that can reset passwords (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:DCSync|AllExtendedRights|GenericAll|MemberOf*1..5]->(:Domain) RETURN p"
+          "query": "MATCH p = (o)-[:ForceChangePassword|MemberOf*1..3]->(:User {enabled: true}) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Non-valueable users that can reset passwords (5 hops)",
+      "name": "Regular users that can add members to groups (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:ForceChangePassword|MemberOf*1..5]->(:User {enabled: true}) RETURN p"
+          "query": "MATCH p = (o)-[:AddMember|MemberOf*1..3]->(:Group) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Non-valueable users that can add members to groups (5 hops)",
+      "name": "Regular users with paths to disabled users (3 hops)",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:AddMember|MemberOf*1..5]->(:Group) RETURN p"
+          "query": "MATCH p = (o)-[:AllExtendedRights|GenericAll|GenericWrite|Owns|WriteAccountRestrictions|WriteDacl|WriteOwner|WriteProperty|MemberOf*1..3]->(:User {enabled: false}) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
     {
-      "name": "Non-valueable users with paths to disabled users (5 hops)",
+      "name": "Regular users owning objects",
       "category": "Escalation",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:AllExtendedRights|GenericAll|GenericWrite|Owns|WriteAccountRestrictions|WriteDacl|WriteOwner|WriteProperty|MemberOf*1..5]->(:User {enabled: false}) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Non-valueable users owning objects",
-      "category": "Escalation",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:User {enabled: true, highvalue: false})-[:Owns]->() RETURN p"
+          "query": "MATCH p = (o)-[:Owns]->() WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
         }
       ]
     },
@@ -478,7 +468,7 @@
       ]
     },
     {
-      "name": "Paths from computers excluding tier 0 (3 hops)",
+      "name": "Paths from computers excluding T0 (3 hops)",
       "category": "NTLM Relaying",
       "queryList": [
         {
@@ -508,7 +498,7 @@
       ]
     },
     {
-      "name": "Unconstrained delegations excluding tier 0",
+      "name": "Unconstrained delegations excluding T0",
       "category": "Kerberos",
       "queryList": [
         {
@@ -518,7 +508,7 @@
       ]
     },
     {
-      "name": "Constrained delegations excluding tier 0",
+      "name": "Constrained delegations excluding T0",
       "category": "Kerberos",
       "queryList": [
         {
@@ -528,7 +518,7 @@
       ]
     },
     {
-      "name": "Constrained delegations with protocol transition excluding tier 0",
+      "name": "Constrained delegations with protocol transition excluding T0",
       "category": "Kerberos",
       "queryList": [
         {
@@ -538,7 +528,7 @@
       ]
     },
     {
-      "name": "Constrained delegations without protocol transition excluding tier 0",
+      "name": "Constrained delegations without protocol transition excluding T0",
       "category": "Kerberos",
       "queryList": [
         {
@@ -548,7 +538,7 @@
       ]
     },
     {
-      "name": "Resource-based constrained delegations excluding tier 0",
+      "name": "Resource-based constrained delegations excluding T0",
       "category": "Kerberos",
       "queryList": [
         {
@@ -608,7 +598,7 @@
       ]
     },
     {
-      "name": "Direct paths to GPOs excluding tier 0",
+      "name": "Direct paths to GPOs excluding T0",
       "category": "GPOs",
       "queryList": [
         {
@@ -738,7 +728,17 @@
       ]
     },
     {
-      "name": "Tier 0 users that never logged on",
+      "name": "Cross-domain password reuse",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (u1:User {enabled: true})-[:HasCredential]->(:Credential)-[:AssignedTo]->(u2:User {enabled: true}) WHERE u1.domain<>u2.domain RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "T0 users that never logged on",
       "category": "Audit",
       "queryList": [
         {
@@ -758,12 +758,12 @@
       ]
     },
     {
-      "name": "Tier 0 users without logon since 90 days",
+      "name": "T0 users without logon since 90 days",
       "category": "Audit",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier: 0}) WHERE (coalesce(u.lastlogon, 0) <= 0 AND coalesce(u.lastlogontimestamp, 0) <= 0) OR (datetime().epochseconds - u.lastlogon > 60*60*24*90 AND datetime().epochseconds - u.lastlogontimestamp > 60*60*24*90) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier: 0}) WHERE NOT coalesce(u.active, false) RETURN p"
         }
       ]
     },
@@ -773,12 +773,12 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE (coalesce(u.lastlogon, 0) <= 0 AND coalesce(u.lastlogontimestamp, 0) <= 0) OR (datetime().epochseconds - u.lastlogon > 60*60*24*90 AND datetime().epochseconds - u.lastlogontimestamp > 60*60*24*90) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE NOT coalesce(u.active, false) AND (coalesce(u.lastlogon, 0) > 0 OR coalesce(u.lastlogontimestamp, 0) > 0) RETURN p"
         }
       ]
     },
     {
-      "name": "Tier 0 users that never set a password",
+      "name": "T0 users that never set a password",
       "category": "Audit",
       "queryList": [
         {
@@ -798,7 +798,7 @@
       ]
     },
     {
-      "name": "Tier 0 users without password change since a year",
+      "name": "T0 users without password change since a year",
       "category": "Audit",
       "queryList": [
         {
@@ -818,7 +818,7 @@
       ]
     },
     {
-      "name": "Tier 0 users with password change after last logon",
+      "name": "T0 users with password change after last logon",
       "category": "Audit",
       "queryList": [
         {
@@ -838,7 +838,7 @@
       ]
     },
     {
-      "name": "Tier 0 users with password not required",
+      "name": "T0 users with password not required",
       "category": "Audit",
       "queryList": [
         {
@@ -858,7 +858,7 @@
       ]
     },
     {
-      "name": "Tier 0 users with never expiring passwords",
+      "name": "T0 users with never expiring passwords",
       "category": "Audit",
       "queryList": [
         {
@@ -898,7 +898,7 @@
       ]
     },
     {
-      "name": "Tier 0 users that are not protected (5 hops)",
+      "name": "T0 users that are not protected (5 hops)",
       "category": "Audit",
       "queryList": [
         {
@@ -938,12 +938,12 @@
       ]
     },
     {
-      "name": "Tier 0 computers without logon",
+      "name": "T0 computers without logon",
       "category": "Audit",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true, tier: 0}) WHERE c.lastlogon <= 0 AND c.lastlogontimestamp <= 0 RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true, tier: 0}) WHERE coalesce(c.lastlogon, 0) <= 0 AND coalesce(c.lastlogontimestamp, 0) <= 0 RETURN p"
         }
       ]
     },
@@ -953,17 +953,17 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE c.lastlogon <= 0 AND c.lastlogontimestamp <= 0 RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE coalesce(c.lastlogon) <= 0 AND coalesce(c.lastlogontimestamp) <= 0 RETURN p"
         }
       ]
     },
     {
-      "name": "Tier 0 computers without logon since 90 days",
+      "name": "T0 computers without logon since 90 days",
       "category": "Audit",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true, tier: 0}) WHERE (coalesce(c.lastlogon, 0) <= 0 AND coalesce(c.lastlogontimestamp, 0) <= 0) OR (datetime().epochseconds - c.lastlogon > 60*60*24*90 AND datetime().epochseconds - c.lastlogontimestamp > 60*60*24*90) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true, tier: 0}) WHERE NOT coalesce(c.active, false) RETURN p"
         }
       ]
     },
@@ -973,7 +973,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE (coalesce(c.lastlogon, 0) <= 0 AND coalesce(c.lastlogontimestamp, 0) <= 0) OR (datetime().epochseconds - c.lastlogon > 60*60*24*90 AND datetime().epochseconds - c.lastlogontimestamp > 60*60*24*90) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT coalesce(c.active, false) RETURN p"
         }
       ]
     },
@@ -988,7 +988,7 @@
       ]
     },
     {
-      "name": "Paths from cracked passwords excluding tier 0 to valueable targets (3 hops)",
+      "name": "Paths from cracked passwords excluding T0 to valueable targets (3 hops)",
       "category": "Passwords",
       "queryList": [
         {
@@ -1008,7 +1008,7 @@
       ]
     },
     {
-      "name": "Tier 0 users with cracked password",
+      "name": "T0 users with cracked password",
       "category": "Passwords",
       "queryList": [
         {
@@ -1028,7 +1028,7 @@
       ]
     },
     {
-      "name": "Tier 0 users with shared password",
+      "name": "T0 users with shared password",
       "category": "Passwords",
       "queryList": [
         {
@@ -1168,22 +1168,12 @@
       ]
     },
     {
-      "name": "Reset tiering tags",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (a) SET a.tier=null"
-        }
-      ]
-    },
-    {
       "name": "Tag T2 OUs",
       "category": "AD Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU) WHERE a.name=~'(?i)tier.?2.*?' SET a.tier=2 RETURN p UNION MATCH p = (a:OU {tier: 2})-[:Contains*1..]->(b) SET b.tier=2 RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?2.*?' SET a.tier=2, b.tier=2 RETURN p"
         }
       ]
     },
@@ -1193,7 +1183,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU) WHERE a.name=~'(?i)tier.?1.*?' SET a.tier=1 RETURN p UNION MATCH p = (a:OU {tier: 1})-[:Contains*1..]->(b) SET b.tier=1 RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?1.*?' SET a.tier=1, b.tier=1 RETURN p"
         }
       ]
     },
@@ -1203,7 +1193,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (d:Domain)-[:Contains*1..]->(o:OU) WHERE o.name=~'(?i)tier.?0.*?' SET d.tier=0, o.tier=0 RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?0.*?' SET a.tier=0, b.tier=0 RETURN p"
         }
       ]
     },
@@ -1241,12 +1231,32 @@
       ]
     },
     {
+      "name": "Tag T0 objects",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (d:Domain) SET d.tier=0, d.highvalue=true RETURN d"
+        }
+      ]
+    },
+    {
       "name": "Tag T0 groups",
       "category": "AD Tiering",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) OR any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) OR any(y IN ['DnsAdmins', 'DHCP ADMINISTRATORS'] WHERE x.name STARTS WITH toUpper(y + '@')) SET x.tier=0, x.highvalue=true RETURN x"
+          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) OR any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) SET x.tier=0, x.highvalue=true RETURN x"
+        }
+      ]
+    },
+    {
+      "name": "Tag valueable groups",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS', 'DHCP ADMINISTRATORS'] WHERE x.name STARTS WITH toUpper(y + '@')) OR any(y IN ['S-1-5-32-562', 'S-1-5-32-573', 'S-1-5-32-555', 'S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true RETURN x"
         }
       ]
     },
@@ -1257,6 +1267,16 @@
         {
           "final": true,
           "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {tier: 0}) WHERE (x:Group OR x:User OR x:Computer) SET x.tier=0, x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag members of valueable groups (5 hops)",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {highvalue: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true RETURN p"
         }
       ]
     },
@@ -1276,7 +1296,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User) WHERE u.name STARTS WITH 'MSOL_' SET u.tier=0 RETURN u"
+          "query": "MATCH (u:User) WHERE u.name STARTS WITH 'MSOL_' SET u.tier=0, u.highvalue=true RETURN u"
         }
       ]
     },
@@ -1311,7 +1331,7 @@
       ]
     },
     {
-      "name": "Show Tier 0",
+      "name": "Show T0",
       "category": "AD Tiering",
       "queryList": [
         {
@@ -1326,7 +1346,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[]->(y) WHERE x.tier>y.tier OR (x.tier IS NULL AND y.tier < 2) RETURN p"
+          "query": "MATCH p = (x)-[]->(y) WHERE x.tier > y.tier OR (x.tier IS NULL AND y.tier < 2) RETURN p"
         }
       ]
     },
@@ -1341,7 +1361,27 @@
       ]
     },
     {
-      "name": "Mark tier 0 roles",
+      "name": "Reset tiering tags",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a) SET a.tier=null, a.highvalue=null"
+        }
+      ]
+    },
+    {
+      "name": "Mark T0 objects",
+      "category": "Azure Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (t:AZTenant) SET t.tier=0, t.highvalue=true RETURN t"
+        }
+      ]
+    },
+    {
+      "name": "Mark T0 roles",
       "category": "Azure Tiering",
       "queryList": [
         {
@@ -1356,12 +1396,12 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Developer|Authentication Administrator|Authentication Policy Administrator|Cloud Device Administrator|Conditional Access Administrator|Directory Writers|Exchange Administrator|Global Reader|Helpdesk Administrator|Hybrid Identity Administrator|Password Administrator|Security Administrator|External Identity Provider Administrator|Domain Name Administrator|Partner Tier2 Support' SET r.highvalue=true RETURN r"
+          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Administrator|Application Developer|Attribute Assignment Administrator|Attribute Assignment Reader|Attribute Definition Administrator|Attribute Definition Reader|Attribute Log Administrator|Authentication Administrator|Authentication Extensibility Administrator|Authentication Policy Administrator|B2C IEF Keyset Administrator|B2C IEF Policy Administrator|Billing Administrator|Cloud Application Administrator|Cloud App Security Administrator|Cloud Device Administrator|Compliance Data Administrator|Conditional Access Administrator|Device Managers|Directory Synchronization Accounts|Directory Writers|Domain Name Administrator|Exchange Administrator|Extended Directory User Administrator|External ID User Flow Administrator|External ID User Flow Attribute Administrator|External Identity Provider Administrator|Global Administrator|Global Reader|Global Secure Access Administrator|Groups Administrator|Helpdesk Administrator|Hybrid Identity Administrator|Identity Governance Administrator|Intune Administrator|Knowledge Administrator|Knowledge Manager|License Administrator|Lifecycle Workflows Administrator|Organizational Branding Administrator|Partner Tier1 Support|Partner Tier2 Support|Password Administrator|Permissions Management Administrator|Privileged Authentication Administrator|Privileged Role Administrator|Security Administrator|Security Operator|Security Reader|Teams Administrator|User Administrator|Windows 365 Administrator|Windows Update Deployment Administrator' SET r.highvalue=true RETURN r"
         }
       ]
     },
     {
-      "name": "Mark users in tier 0 roles (10 hops)",
+      "name": "Mark users in T0 roles (10 hops)",
       "category": "Azure Tiering",
       "queryList": [
         {
@@ -1381,7 +1421,7 @@
       ]
     },
     {
-      "name": "Mark owners of subscriptions as tier 0",
+      "name": "Mark owners of subscriptions as T0",
       "category": "Azure Tiering",
       "queryList": [
         {
@@ -1401,7 +1441,7 @@
       ]
     },
     {
-      "name": "Mark apps that are running as tier 0 service principal",
+      "name": "Mark apps that are running as T0 service principal",
       "category": "Azure Tiering",
       "queryList": [
         {
@@ -1421,7 +1461,7 @@
       ]
     },
     {
-      "name": "Mark owners of tier 0 applications",
+      "name": "Mark owners of T0 applications",
       "category": "Azure Tiering",
       "queryList": [
         {
@@ -1461,7 +1501,7 @@
       ]
     },
     {
-      "name": "Show Tier 0",
+      "name": "Show T0",
       "category": "Azure Tiering",
       "queryList": [
         {
@@ -1481,7 +1521,7 @@
       ]
     },
     {
-      "name": "Paths into tier 0 (10 hops)",
+      "name": "Paths into T0 (10 hops)",
       "category": "Azure Paths",
       "queryList": [
         {
@@ -1521,7 +1561,7 @@
       ]
     },
     {
-      "name": "Paths to VMs excluding tier 0 (3 hops)",
+      "name": "Paths to VMs excluding T0 (3 hops)",
       "category": "Azure Paths",
       "queryList": [
         {
@@ -1531,7 +1571,7 @@
       ]
     },
     {
-      "name": "Paths to key vaults excluding tier 0 (3 hops)",
+      "name": "Paths to key vaults excluding T0 (3 hops)",
       "category": "Azure Paths",
       "queryList": [
         {
@@ -1541,7 +1581,7 @@
       ]
     },
     {
-      "name": "Paths to ressource groups excluding tier 0 (3 hops)",
+      "name": "Paths to ressource groups excluding T0 (3 hops)",
       "category": "Azure Paths",
       "queryList": [
         {
@@ -1551,7 +1591,7 @@
       ]
     },
     {
-      "name": "Paths to subscriptions excluding tier 0 (3 hops)",
+      "name": "Paths to subscriptions excluding T0 (3 hops)",
       "category": "Azure Paths",
       "queryList": [
         {
