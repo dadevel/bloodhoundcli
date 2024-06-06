@@ -3,8 +3,6 @@ from typing import Any, Generator
 import json
 import os
 import re
-import shlex
-import subprocess
 import sys
 import time
 
@@ -12,10 +10,12 @@ from requests.auth import HTTPBasicAuth
 import click
 import requests
 
-NEO4J_CONTAINER_PREFIX = 'bloodhound'
 NEO4J_URL = os.environ.get('NEO4J_URL') or 'http://localhost:7474'
 NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
 NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD') or ''
+BLOODHOUND_URL = os.environ.get('BLOODHOUND_URL') or 'http://localhost:7575'
+BLOODHOUND_USERNAME = os.environ.get('BLOODHOUND_USERNAME') or 'admin@bloodhound'
+BLOODHOUND_PASSWORD = os.environ.get('BLOODHOUND_PASSWORD')
 WORD_SEPARATOR_PATTERN = re.compile(r'[^a-zA-Z0-9]')
 
 
@@ -97,106 +97,12 @@ class Database:
         self.execute('CREATE INDEX ad_credential_objectid_index IF NOT EXISTS FOR (c:Credential) ON (c.objectid)')
 
 
-class DatabaseManager:
-    @classmethod
-    def get_status(cls, name: str) -> str:
-        # valid status values: created, exited, paused, running, unknown
-        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
-        process = subprocess.run(['podman', 'container', 'inspect', container_name], check=False, capture_output=True, text=True)
-        if process.returncode != 0:
-            return 'inexistent'
-        entries = json.loads(process.stdout)
-        assert len(entries) == 1
-        return entries[0]['State']['Status']
 
-    @classmethod
-    def get_instances(cls) -> Generator[tuple[str, str], None, None]:
-        prefix = f'{NEO4J_CONTAINER_PREFIX}-'
-        process = subprocess.run(['podman', 'ps', '--all', '--format', 'json'], check=True, capture_output=True, text=True)
-        for container in json.loads(process.stdout):
-            for container_name in container['Names']:
-                if container_name.startswith(prefix):
-                    yield container_name.removeprefix(prefix), container['State']
-
-    @classmethod
-    def get_env_config(cls) -> dict[str, str]:
-        return dict(NEO4J_URL=NEO4J_URL, NEO4J_USERNAME=NEO4J_USERNAME, NEO4J_PASSWORD=NEO4J_PASSWORD)
-
-    @classmethod
-    def setup(cls, name: str) -> dict[str, str]:
-        for instance, status in cls.get_instances():
-            if instance != name and status == 'running':
-                cls.stop(instance)
-        status = cls.get_status(name)
-        if status == 'inexistent':
-            cls.create(name)
-        if status != 'running':
-            cls.start(name)
-        return cls.get_env_config()
-
-    @classmethod
-    def create(cls, name: str) -> str:
-        print(f'creating {name}')
-        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
-        # NEO4J_PLUGINS/NEO4JLABS_PLUGINS threw errors, instead the gds plugin was directly built into the image
-        process = subprocess.run(
-            [
-                'podman', 'create',
-                '--name', container_name,
-                #'--rm',
-                '--publish', f'127.0.0.1:7474:7474',
-                '--publish', f'127.0.0.1:7687:7687',
-                '--env', f'NEO4J_AUTH={NEO4J_USERNAME}/{NEO4J_PASSWORD}' if NEO4J_USERNAME and NEO4J_PASSWORD else 'NEO4J_AUTH=none',
-                #'--volume', f'{name}:/data',
-                'ghcr.io/dadevel/neo4j:4.4.12',
-            ],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        container_id = process.stdout.strip()
-        return container_id
-
-    @classmethod
-    def remove(cls, name: str) -> None:
-        print(f'removing {name}')
-        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
-        subprocess.run(['podman', 'container', 'rm', '-f', container_name], check=True, capture_output=False)
-
-    @classmethod
-    def start(cls, name: str) -> None:
-        print(f'starting {name}')
-        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
-        subprocess.run(['podman', 'container', 'start', container_name], check=True, capture_output=False)
-
-    @classmethod
-    def stop(cls, name: str) -> None:
-        print(f'stopping {name}')
-        container_name = f'{NEO4J_CONTAINER_PREFIX}-{name}'
-        subprocess.run(['podman', 'container', 'stop', container_name], check=True, capture_output=False)
-
-
-
-@click.command('list', help='List Neo4j containers')
-def neo4j_list() -> None:
-    for name, state in DatabaseManager.get_instances():
-        click.echo(f'{name} {state}')
-
-
-@click.command('setup', help='Stop other containers, then run the given container')
-@click.argument('name')
-def neo4j_setup(name: str) -> None:
-    env_vars = DatabaseManager.setup(name)
-    click.echo('\n'.join(f'{key}={shlex.quote(value)}' for key, value in env_vars.items()))
-
-
-@click.command('delete', help='Remove Neo4j container')
-@click.argument('name')
-def neo4j_delete(name: str) -> None:
-    DatabaseManager.remove(name)
-
-
-def query(statement: str, stdin: bool, parse_json: bool) -> None:
+@click.command(help='Execute Cypher statement')
+@click.argument('statement')
+@click.option('-s', '--stdin', is_flag=True)
+@click.option('-j', '--jsonl', is_flag=True)
+def query(statement: str, stdin: bool, jsonl: bool) -> None:
     if stdin and not statement:
         raise RuntimeError('invalid arugment combination')
 
@@ -207,7 +113,7 @@ def query(statement: str, stdin: bool, parse_json: bool) -> None:
     try:
         if stdin:
             for line in sys.stdin:
-                if parse_json:
+                if jsonl:
                     line = json.loads(line)
                 else:
                     line = line.rstrip()
@@ -229,54 +135,8 @@ def print_row(row: Any) -> None:
         sys.stdout.write('\n')
 
 
-@click.command(help='Import SharpHound/BloodHound.py ZIP')
-@click.argument('path')
-def import_sharphound(path: str) -> None:
-    # TODO: start postgres and bloodhoundce-api containers
-    # podman run --name bloodhound-postgres -it --rm --network host -e POSTGRES_USER=bloodhound -e POSTGRES_PASSWORD=bloodhound -e POSTGRES_DATABASE=bloodhound docker.io/library/postgres:13.2
-    # podman run --name bloodhound-api -it --rm --network host -v ./bloodhound.config.json:/bloodhound.config.json docker.io/specterops/bloodhound:latest
-    endpoint = os.environ.get('BLOODHOUND_URL') or 'http://localhost:8080'
-    username = os.environ.get('BLOODHOUND_USERNAME') or click.prompt('username')
-    password = os.environ.get('BLOODHOUND_PASSWORD') or click.prompt('password', hide_input=True)
-    with requests.Session() as session:
-        click.echo('authenticating')
-        response = session.post(f'{endpoint}/api/v2/login', headers=dict(accept='application/json'), json=dict(login_method='secret', username=username, secret=password))
-        response.raise_for_status()
-        response = response.json()
-        token = response['data']['session_token']
-
-        click.echo('starting upload')
-        response = session.post(f'{endpoint}/api/v2/file-upload/start', headers=dict(accept='application/json', authorization=f'Bearer {token}'))
-        response.raise_for_status()
-        response = response.json()
-        upload_id = response['data']['id']
-        click.echo(f'id: {upload_id}')
-
-        click.echo('uploading')
-        with open(path, 'rb') as file:
-            response = session.post(f'{endpoint}/api/v2/file-upload/{upload_id}', headers=dict(accept='application/json', authorization=f'Bearer {token}'), data=file.read())
-            response.raise_for_status()
-
-        click.echo('ending upload')
-        response = session.post(f'{endpoint}/api/v2/file-upload/{upload_id}/end', headers=dict(accept='application/json', authorization=f'Bearer {token}'))
-        response.raise_for_status()
-
-        click.echo('awaiting ingestion')
-        completed = False
-        while not completed:
-            response = session.get(f'{endpoint}/api/v2/file-upload', headers=dict(accept='application/json', authorization=f'Bearer {token}'))
-            response.raise_for_status()
-            response = response.json()
-            for item in response['data']:
-                if item['id'] == upload_id and item['status'] == 2:
-                    completed = True
-                    break
-            time.sleep(1)
-
-
-@click.command('enrich', help='Add indices and weights')
-def neo4j_enrich() -> None:
-    """Add shared passwords and edge costs."""
+@click.command(help='Enrich Neo4j data')
+def enrich() -> None:
     db = Database.from_env()
     db.enrich()
 

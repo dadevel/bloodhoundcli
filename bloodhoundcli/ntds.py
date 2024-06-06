@@ -10,7 +10,7 @@ from bloodhoundcli.hashcat import decode_password
 from bloodhoundcli.neo4j import Database
 from bloodhoundcli.util import nthash
 
-DOMAIN_PATTERN = re.compile(r'^[a-z0-9.-]+$')
+DOMAIN_PATTERN = re.compile(r'^(?:(?:[a-z0-9-]+)\.)+(?:[a-z0-9-]+)$')
 
 
 @click.command(help='Import hashes and cracked passwords from DCSync')
@@ -25,6 +25,8 @@ def import_ntds(ntds: list[Path], potfile: Path) -> None:
     print(f'loaded {len(potdb)} cracked hashes from {potfile}', file=sys.stderr)
 
     for path in ntds:
+        if not path.suffix == '.ntds':
+            print(f'warning: skipping {path} with unknown file format')
         domain = path.name.removesuffix('.ntds')
         if not DOMAIN_PATTERN.fullmatch(domain):
             raise RuntimeError(f'{path} does not follow the expected naming scheme, a DCSync from the corp.local domain should be named corp.local.ntds')

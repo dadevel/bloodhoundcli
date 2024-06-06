@@ -6,34 +6,57 @@ Collection of various utilities to aid in Pentesting with [BloodHound](https://g
 
 # Setup
 
-a) With [pipx](https://github.com/pypa/pipx).
+1. Install [Podman](https://github.com/containers/podman/) and [docker-compose](https://github.com/docker/compose).
+2. [Configure rootless containers](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) for Podman.
+3. Enable the Podman socket for your user.
+
+    ~~~ bash
+    systemctl --user enable --now podman.socket
+    ~~~
+
+3. Install this Python package with [pipx](https://github.com/pypa/pipx).
+
+    ~~~ bash
+    pipx install git+https://github.com/dadevel/bloodhoundcli.git@main
+    ~~~
+
+4. Install the [custom queries](./customqueries.json) for BloodHound (includes queries from [@luemmelsec](https://github.com/LuemmelSec/Custom-BloodHound-Queries) and [@martinsohn](https://gist.github.com/martinsohn/3f6122c7486ca3ffcaa444772f1a35f2) among others).
+
+    ~~~ bash
+    curl -Lo ~/.config/bloodhound/customqueries.json https://raw.githubusercontent.com/dadevel/bloodhoundcli/main/customqueries.json
+    ~~~
+
+## Project Management
+
+Projects are managed with [Podman](https://github.com/containers/podman) containers.
+Only one project can be active at a time.
+Each project consists of [BloodHound Community Edition](https://github.com/specterops/bloodhound), Neo4j and Postgres.
+Neo4j is available at the usual <http://localhost:7687/> for use with [BloodHound Legacy](https://github.com/bloodhoundad/bloodhound/) while BloodHound Community Edition is accessible via <http://localhost:7575/>.
 
 ~~~ bash
-pipx install git+https://github.com/dadevel/bloodhoundcli.git@main
+bloodhoundcli setup-project example1
+bloodhoundcli shutdown-project example1
+bloodhoundcli setup-project example2
+bloodhoundcli list-projects
+bloodhoundcli destroy-project example1
+bloodhoundcli destroy-project example2
 ~~~
 
-b) With [pip](https://github.com/pypa/pip).
+## Authentication
 
-~~~ bash
-pip install --user git+https://github.com/dadevel/bloodhoundcli.git@main
-~~~
+- BloodHound Legacy: <bolt://localhost:7687/>, username *neo4j*, empty password
+- Neo4j: <http://localhost:7474/>, same credentials as above
+- BloodHound Community Edition: <http://localhost:7575/>, username *admin@bloodhound*, initial password displayed by `setup-project`
 
-In any case complete the setup by installing the [custom queries](./customqueries.json) for BloodHound (includes queries from [@luemmelsec](https://github.com/LuemmelSec/Custom-BloodHound-Queries) and [@martinsohn](https://gist.github.com/martinsohn/3f6122c7486ca3ffcaa444772f1a35f2) among others).
+## Data Collection
 
-~~~ bash
-curl -Lo ~/.config/bloodhound/customqueries.json https://raw.githubusercontent.com/dadevel/bloodhoundcli/main/customqueries.json
-~~~
+- [SharpHound](https://github.com/bloodhoundad/sharphound): must be imported via BloodHound Community Edition
+- [AzureHound](https://github.com/bloodhoundad/azurehound): must be import via BloodHound Community Edition
+- [bloodhound.py](https://github.com/dirkjanm/bloodhound.py): can be imported with Legacy BloodHound
 
-# Usage
+## CLI Integration
 
-Run Neo4j containers with [Podman](https://github.com/containers/podman).
-
-~~~ bash
-bloodhoundcli setup project-1
-bloodhoundcli setup project-2  # first container will be stopped
-~~~
-
-Execute arbitrary Cypher queries against Neo4j.
+Quickly fetch data from Neo4j for use with other tools or import data from other tools into BloodHound.
 
 ~~~ bash
 bloodhoundcli query 'MATCH (u:User {enabled: true}) RETURN u.samaccountname' > ./users.txt
@@ -47,9 +70,10 @@ bloodhoundcli query -s -j 'MATCH (u:User {name: $stdin.name}) SET u.foo=$stdin.v
 EOF
 ~~~
 
+## NTDS Import
+
 Run a DCSync from [impacket-secretsdump](https://github.com/fortra/impacket) with multiple wordlists and rulesets trough [Hashcat](https://github.com/hashcat/hashcat).
-Pre-created computer accounts are automatically cracked.
-Specify `--no-lm-brute` to skip LM hash cracking.
+LM hashes and pre-created computer accounts are automatically cracked unless `--no-lm-brute` respective `--no-pre2k` is specified.
 
 ~~~ bash
 impacket-secretsdump -just-dc -outputfile corp.local -k -no-pass dc01.corp.local
@@ -68,12 +92,16 @@ bloodhoundcli import-ntds -p ./hashcat.potfile ./*.ntds
 > `bloodhoundcli` assumes that the name of the NTDS file minus the `.ntds` suffix is the FQDN of the domain.
 > This means a DCSync from `dc01.subdomain.corp.local` should be named `subdomain.corp.local.ntds`.
 
+## NetExec Integration
+
 Import nodes for standalone computers and local users by leveraging the SQLite database of [NetExec](https://github.com/pennyw0rth/netexec).
 This includes `nthash` properties from SAM dumps and `AdminTo` as well as `HasCredential` and `AssignedTo` edges e.g. to identify local admin password reuse.
 
 ~~~ bash
 bloodhoundcli import-netexec ~/.nxc/workspaces/default/smb.db
 ~~~
+
+## Manual Session Collection
 
 Add historical session data as well as inferred RDP and local admin edges (original idea from [@rantasec](https://medium.com/@rantasec/bloodhound-for-blue-teams-windows-event-id-4624-a259c76ee09e)).
 First export recent logons from Windows Event Logs with [Get-RecentLogons.ps1](./Get-RecentLogons.ps1), then transfer the JSON output to your computer and finally import it into Neo4j.
@@ -95,22 +123,3 @@ Now you can use queries like the following to find the easiest instead of the sh
 ~~~ cypher
 MATCH (a {owned: true}) MATCH (b {highvalue: true}) CALL apoc.algo.dijkstra(a, b, '>', 'cost') YIELD path RETURN path;
 ~~~
-
-## BloodHound Community Edition
-
-Setup BHCE in Podman.
-
-~~~ bash
-systemctl --user enable --now podman.socket
-export DOCKER_HOST="unix:///run/user/$UID/podman/podman.sock"
-podman compose up -d
-firefox http://localhost:7575/
-~~~
-
-Login to BHCE at <http://localhost:7575> with username *admin@bloodhound* and the initial password from the logs.
-
-~~~ bash
-podman compose logs bloodhound 2> /dev/null | grep -oE 'Initial Password Set To: *[^ ]+' | sed 's|Initial Password Set To: *||'
-~~~
-
-Login to Neo4j at <http://localhost:7474/> with the credentials *neo4j:bloodhound*.

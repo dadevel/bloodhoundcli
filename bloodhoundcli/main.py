@@ -1,6 +1,6 @@
 import click
 
-from bloodhoundcli import neo4j, hashcat, netexec, ntds, pwstats, winevent
+from bloodhoundcli import composer, neo4j, hashcat, netexec, ntds, pwstats, winevent
 
 
 @click.group()
@@ -8,20 +8,13 @@ def main() -> None:
     pass
 
 
-@main.command(help='Execute Cypher statement')
-@click.argument('statement')
-@click.option('-s', '--stdin', is_flag=True)
-@click.option('-j', '--jsonl', is_flag=True)
-def query(statement: str, stdin: bool, jsonl: bool) -> None:
-    neo4j.query(statement, stdin, jsonl)
-
-
-main.add_command(neo4j.neo4j_list)
-main.add_command(neo4j.neo4j_setup)
-main.add_command(neo4j.neo4j_delete)
-main.add_command(neo4j.neo4j_enrich)
-#main.add_command(neo4j.import_sharphound)  # work in progress
+main.add_command(neo4j.query)
+main.add_command(composer.list_projects)
+main.add_command(composer.setup_project)
+main.add_command(composer.shutdown_project)
+main.add_command(composer.destroy_project)
 main.add_command(neo4j.generate_wordlist)
+main.add_command(neo4j.enrich)
 main.add_command(hashcat.hashcat_ntds)
 main.add_command(hashcat.hashcat_decode)
 main.add_command(netexec.import_netexec)
