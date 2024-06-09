@@ -1256,7 +1256,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS', 'DHCP ADMINISTRATORS'] WHERE x.name STARTS WITH toUpper(y + '@')) OR any(y IN ['S-1-5-32-562', 'S-1-5-32-573', 'S-1-5-32-555', 'S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true RETURN x"
+          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS', 'DHCP ADMINISTRATORS', 'ORGANIZATION MANAGEMENT', 'EXCHANGE TRUSTED SUBSYSTEM', 'EXCHANGE WINDOWS PERMISSIONS'] WHERE x.name STARTS WITH toUpper(y + '@')) OR any(y IN ['S-1-5-32-562', 'S-1-5-32-573', 'S-1-5-32-555', 'S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true RETURN x"
         }
       ]
     },
