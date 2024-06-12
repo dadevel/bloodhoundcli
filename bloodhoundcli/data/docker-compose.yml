@@ -45,7 +45,6 @@ services:
     environment:
       bhe_neo4j_connection: neo4j://neo4j:@neo4j:7687/
       bhe_database_connection: host=postgres user=postgres password= dbname=postgres
-      bhe_disable_cypher_qc: 'false'
       bhe_graph_query_memory_limit: '4'
       bhe_disable_cypher_complexity_limit: 'true'
       bhe_enable_cypher_mutations: 'true'

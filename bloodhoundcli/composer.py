@@ -19,18 +19,6 @@ def list_projects() -> None:
             click.echo(f'{project["Name"].removeprefix(PROJECT_NAME_PREFIX)} {project["Status"]}')
 
 
-def find_password_in_logs(project_name: str) -> str:
-    process = subprocess.run(['podman', 'compose', '--project-name', project_name, 'logs', '--no-log-prefix', '--no-color', 'bloodhound'], check=True, capture_output=True, text=True)
-    for line in process.stdout.splitlines():
-        if 'Initial Password Set To' in line:
-            line = json.loads(line)
-            password = line['message']
-            password = password.removeprefix('# Initial Password Set To:')
-            password = password.strip('# ')
-            return password
-    return ''
-
-
 @click.command(help='Create and/or start new project')
 @click.argument('name')
 def setup_project(name: str) -> None:
@@ -41,10 +29,6 @@ def setup_project(name: str) -> None:
             check=True,
             capture_output=False,
         )
-
-    password = find_password_in_logs(project_name)
-    if password:
-        print(f'BHCE credentials: user: admin@bloodhound, pass: {password}')
 
 
 @click.command(help='Stop project but keep data')

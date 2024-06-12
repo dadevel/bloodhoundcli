@@ -4,7 +4,7 @@
   "metrics_port": ":2112",
   "root_url": "http://127.0.0.1:8080/",
   "work_dir": "/opt/bloodhound/work",
-  "log_level": "INFO",
+  "log_level": "WARN",
   "log_path": "bloodhound.log",
   "tls": {
     "cert_file": "",
@@ -13,8 +13,10 @@
   "collectors_base_path": "/etc/bloodhound/collectors",
   "default_admin": {
     "principal_name": "admin",
-    "first_name": "Bloodhound",
+    "email_address": "admin@bloodhound",
+    "password": "",
+    "first_name": "BloodHound",
     "last_name": "Administrator",
-    "email_address": "admin@bloodhound"
+    "expire_now": false
   }
 }

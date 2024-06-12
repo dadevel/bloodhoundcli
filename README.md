@@ -46,7 +46,7 @@ bloodhoundcli destroy-project example2
 
 - BloodHound Legacy: <bolt://localhost:7687/>, username *neo4j*, empty password
 - Neo4j: <http://localhost:7474/>, same credentials as above
-- BloodHound Community Edition: <http://localhost:7575/>, username *admin@bloodhound*, initial password displayed by `setup-project`
+- BloodHound Community Edition: <http://localhost:7575/>, username *admin@bloodhound*, empty password
 
 ## Data Collection
 
