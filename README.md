@@ -31,7 +31,6 @@ Collection of various utilities to aid in Pentesting with [BloodHound](https://g
 Projects are managed with [Podman](https://github.com/containers/podman) containers.
 Only one project can be active at a time.
 Each project consists of [BloodHound Community Edition](https://github.com/specterops/bloodhound), Neo4j and Postgres.
-Neo4j is available at the usual <http://localhost:7687/> for use with [BloodHound Legacy](https://github.com/bloodhoundad/bloodhound/) while BloodHound Community Edition is accessible via <http://localhost:7575/>.
 
 ~~~ bash
 bloodhoundcli setup-project example1
@@ -45,7 +44,7 @@ bloodhoundcli destroy-project example2
 ## Authentication
 
 - BloodHound Legacy: <bolt://localhost:7687/>, username *neo4j*, empty password
-- Neo4j: <http://localhost:7474/>, same credentials as above
+- Neo4j: <http://localhost:7474/>, username *neo4j*, empty password
 - BloodHound Community Edition: <http://localhost:7575/>, username *admin@bloodhound*, empty password
 
 ## Data Collection
