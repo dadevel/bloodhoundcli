@@ -1,7 +1,9 @@
 import importlib.resources
 import json
+import os
 import re
 import subprocess
+from pathlib import Path
 
 import click
 
@@ -32,6 +34,7 @@ def setup_project(name: str) -> None:
             check=True,
             capture_output=False,
         )
+    install_custom_queries_bh_legacy()
     session = bhce.login()
     bhce.import_custom_queries(session)
 
@@ -58,3 +61,15 @@ def destroy_project(name: str) -> None:
             check=True,
             capture_output=False,
         )
+
+
+def install_custom_queries_bh_legacy() -> None:
+    dest_path = Path.home()/'.config/bloodhound/customqueries.json'
+    with importlib.resources.path(data, 'customqueries.json') as src_path:
+        if dest_path.resolve() == src_path:
+            # queries already installed
+            return
+        if not dest_path.exists():
+            os.symlink(src_path, dest_path)
+            return
+        print('warning: wont install custom queries, there is already a file present')
