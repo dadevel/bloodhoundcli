@@ -4,12 +4,24 @@ import os
 import time
 
 from requests import Session
+import requests
 
 from bloodhoundcli import data  # type: ignore
 
 BLOODHOUND_URL = os.environ.get('BLOODHOUND_URL') or 'http://localhost:7575'
 BLOODHOUND_USERNAME = os.environ.get('BLOODHOUND_USERNAME') or 'admin@bloodhound'
 BLOODHOUND_PASSWORD = os.environ.get('BLOODHOUND_PASSWORD') or ''
+
+
+def wait_until_up() -> None:
+    print('waiting for BHCE')
+    while True:
+        try:
+            response = requests.get(f'{BLOODHOUND_URL}/ui/')
+            response.raise_for_status()
+            return
+        except requests.exceptions.ConnectionError:
+            time.sleep(1)
 
 
 def login() -> Session:
@@ -56,7 +68,6 @@ def import_custom_queries(session: Session) -> None:
 def create_query(session: Session, name: str, statement: str) -> None:
     tries = 0
     while True:
-        print(f'creating query {name!r}')
         response = session.post(f'{BLOODHOUND_URL}/api/v2/saved-queries', json=dict(name=name, query=statement))
         if response.ok:
             return
@@ -70,7 +81,6 @@ def create_query(session: Session, name: str, statement: str) -> None:
 def delete_query(session: Session, name: str) -> None:
     tries = 0
     while True:
-        print(f'deleting query {name!r}')
         response = session.delete(f'{BLOODHOUND_URL}/api/v2/saved-queries', json=dict(name=name))
         if response.ok:
             return

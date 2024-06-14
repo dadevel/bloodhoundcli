@@ -35,6 +35,7 @@ def setup_project(name: str) -> None:
             capture_output=False,
         )
     install_custom_queries_bh_legacy()
+    bhce.wait_until_up()
     session = bhce.login()
     bhce.import_custom_queries(session)
 
