@@ -1,22 +1,25 @@
 import importlib.resources
 import json
+import re
 import subprocess
 
 import click
 
 from bloodhoundcli import data  # type: ignore
+from bloodhoundcli import bhce
 
 PROJECT_NAME_PREFIX = 'bloodhound-'
+PROJECT_NAME_PATTERN = re.compile(r'^bloodhound-(.*?)_neo4j-data$')
 COMPOSE_RESOURCE = importlib.resources.path(data, 'docker-compose.yml')
 
 
 @click.command(help='List projects')
 def list_projects() -> None:
-    process = subprocess.run(['podman', 'compose', 'ls', '--all', '--format', 'json'], check=True, capture_output=True, text=True)
-    projects = json.loads(process.stdout)
-    for project in projects:
-        if project['Name'].startswith(PROJECT_NAME_PREFIX):
-            click.echo(f'{project["Name"].removeprefix(PROJECT_NAME_PREFIX)} {project["Status"]}')
+    process = subprocess.run(['podman', 'volume', 'ls', '--format', 'json'], check=True, capture_output=True, text=True)
+    volumes = json.loads(process.stdout)
+    for volume in volumes:
+        if match := PROJECT_NAME_PATTERN.fullmatch(volume['Name']):
+            click.echo(match.group(1))
 
 
 @click.command(help='Create and/or start new project')
@@ -29,6 +32,8 @@ def setup_project(name: str) -> None:
             check=True,
             capture_output=False,
         )
+    session = bhce.login()
+    bhce.import_custom_queries(session)
 
 
 @click.command(help='Stop project but keep data')

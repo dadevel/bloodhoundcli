@@ -20,10 +20,10 @@ Collection of various utilities to aid in Pentesting with [BloodHound](https://g
     pipx install git+https://github.com/dadevel/bloodhoundcli.git@main
     ~~~
 
-4. Install the [custom queries](./customqueries.json) for BloodHound (includes queries from [@luemmelsec](https://github.com/LuemmelSec/Custom-BloodHound-Queries) and [@martinsohn](https://gist.github.com/martinsohn/3f6122c7486ca3ffcaa444772f1a35f2) among others).
+4. Install the [custom queries](./bloodhoundcli/data/customqueries.json) for BloodHound (includes queries from [@luemmelsec](https://github.com/LuemmelSec/Custom-BloodHound-Queries) and [@martinsohn](https://gist.github.com/martinsohn/3f6122c7486ca3ffcaa444772f1a35f2) among others).
 
     ~~~ bash
-    curl -Lo ~/.config/bloodhound/customqueries.json https://raw.githubusercontent.com/dadevel/bloodhoundcli/main/customqueries.json
+    curl -Lo ~/.config/bloodhound/customqueries.json https://github.com/dadevel/bloodhoundcli/raw/main/bloodhoundcli/data/customqueries.json
     ~~~
 
 ## Project Management

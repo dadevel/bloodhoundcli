@@ -13,9 +13,6 @@ import requests
 NEO4J_URL = os.environ.get('NEO4J_URL') or 'http://localhost:7474'
 NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
 NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD') or ''
-BLOODHOUND_URL = os.environ.get('BLOODHOUND_URL') or 'http://localhost:7575'
-BLOODHOUND_USERNAME = os.environ.get('BLOODHOUND_USERNAME') or 'admin@bloodhound'
-BLOODHOUND_PASSWORD = os.environ.get('BLOODHOUND_PASSWORD')
 WORD_SEPARATOR_PATTERN = re.compile(r'[^a-zA-Z0-9]')
 
 
