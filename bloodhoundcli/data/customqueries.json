@@ -1068,6 +1068,36 @@
       ]
     },
     {
+      "name": "Users where password equals username (including reverse spelling)",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WHERE toLower(c.password) = toLower(u.samaccountname) OR toLower(c.password) = toLower(reverse(u.samaccountname)) SET c.weak = true RETURN u.name"
+        }
+      ]
+    },
+    {
+      "name": "Users where password contains username",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WHERE toLower(c.password) CONTAINS toLower(u.samaccountname) SET c.weak = true RETURN u.name"
+        }
+      ]
+    },
+    {
+      "name": "Users where password contains a part of the user's domain",
+      "category": "Passwords",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WITH c, u, split(u.domain, '.') AS parts WHERE toLower(c.password) CONTAINS any(part IN parts[0..-1] WHERE toLower(c.password) CONTAINS toLower(part)) SET c.weak = true RETURN u.name"
+        }
+      ]
+    },
+    {
       "name": "Users with empty password",
       "category": "Passwords",
       "queryList": [
