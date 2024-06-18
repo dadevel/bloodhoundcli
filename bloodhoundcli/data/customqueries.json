@@ -1058,42 +1058,32 @@
       ]
     },
     {
-      "name": "Users where password equals username",
+      "name": "Users where password equals username or reverse username",
       "category": "Passwords",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WHERE toLower(c.password)=toLower(u.samaccountname) SET c.weak=true RETURN p"
+          "query": "MATCH p = (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WHERE toLower(c.password)=toLower(u.samaccountname) OR toLower(c.password)=toLower(reverse(u.samaccountname)) SET c.weak=true RETURN p"
         }
       ]
     },
     {
-      "name": "Users where password equals username (including reverse spelling)",
+      "name": "Users where password contains username or reverse username",
       "category": "Passwords",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WHERE toLower(c.password) = toLower(u.samaccountname) OR toLower(c.password) = toLower(reverse(u.samaccountname)) SET c.weak = true RETURN u.name"
+          "query": "MATCH p = (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WHERE toLower(c.password) CONTAINS toLower(u.samaccountname) OR toLower(c.password) CONTAINS toLower(reverse(u.samaccountname)) SET c.weak=true RETURN p"
         }
       ]
     },
     {
-      "name": "Users where password contains username",
+      "name": "Users where password contains part of domain",
       "category": "Passwords",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WHERE toLower(c.password) CONTAINS toLower(u.samaccountname) SET c.weak = true RETURN u.name"
-        }
-      ]
-    },
-    {
-      "name": "Users where password contains a part of the user's domain",
-      "category": "Passwords",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WITH c, u, split(u.domain, '.') AS parts WHERE toLower(c.password) CONTAINS any(part IN parts[0..-1] WHERE toLower(c.password) CONTAINS toLower(part)) SET c.weak = true RETURN u.name"
+          "query": "MATCH p = (c:Credential)-[:AssignedTo]->(u:User {enabled: true}) WHERE any(part IN split(u.domain, '.')[0..-1] WHERE toLower(c.password) CONTAINS toLower(part)) RETURN p"
         }
       ]
     },
