@@ -55,9 +55,17 @@ bloodhoundcli destroy-project example2
 
 ## Data Collection
 
-- [SharpHound](https://github.com/bloodhoundad/sharphound): must be imported via BloodHound Community Edition
-- [AzureHound](https://github.com/bloodhoundad/azurehound): must be import via BloodHound Community Edition
-- [bloodhound.py](https://github.com/dirkjanm/bloodhound.py): can be imported with Legacy BloodHound
+Data sources:
+
+- [SharpHound](https://github.com/bloodhoundad/sharphound): can be imported with bloodhoundcli
+- [AzureHound](https://github.com/bloodhoundad/azurehound): can be imported with bloodhoundcli
+- [bloodhound.py](https://github.com/dirkjanm/bloodhound.py): must be imported via Legacy BloodHound
+
+Ingest files from AzureHound and SharpHound.
+
+~~~ bash
+bloodhoundcli import-bhce ./azurehound.json ./*_BloodHound.zip
+~~~
 
 ## CLI Integration
 

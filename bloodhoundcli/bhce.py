@@ -1,3 +1,4 @@
+from pathlib import Path
 import importlib.resources
 import json
 import os
@@ -5,6 +6,7 @@ import time
 
 from requests import Session
 import requests
+import click
 
 from bloodhoundcli import data  # type: ignore
 
@@ -89,3 +91,34 @@ def delete_query(session: Session, name: str) -> None:
                 response.raise_for_status()
             tries += 1
             time.sleep(1)
+
+
+def ingest_file(session: Session, path: Path) -> None:
+    response = session.post(f'{BLOODHOUND_URL}/api/v2/file-upload/start')
+    response.raise_for_status()
+    data = response.json()
+    job_id = data['data']['id']
+    with open(path, mode='rb') as file:
+        data = file.read()
+    response = session.post(f'{BLOODHOUND_URL}/api/v2/file-upload/{job_id}', data=data, headers={'Content-Type': f'application/{path.suffix.removeprefix('.')}'})
+    response.raise_for_status()
+    response = session.post(f'{BLOODHOUND_URL}/api/v2/file-upload/{job_id}/end')
+    response.raise_for_status()
+
+
+def ingest_files(session: Session, paths: list[Path]) -> None:
+    for path in paths:
+        if path.suffix not in ('.json', '.zip'):
+            print(f'error: {path}: unsupported file extension')
+            continue
+        ingest_file(session, path)
+    print('upload complete, ingestion can take some time')
+
+
+@click.command()
+@click.argument('file', type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path), nargs=-1)
+def import_bhce(file: list[Path]) -> None:
+    if not file:
+        return
+    session = login()
+    ingest_files(session, file)
