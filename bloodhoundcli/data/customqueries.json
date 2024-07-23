@@ -998,12 +998,12 @@
       ]
     },
     {
-      "name": "Paths from kerberoasted users (3 hops)",
+      "name": "Kerberoasted users",
       "category": "Passwords",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Credential {cracked: true})-[:AssignedTo]->(u:User {enabled: true, hasspn: true})-[*1..3]->() WHERE coalesce(u.tier, 2)<>0 RETURN p"
+          "query": "MATCH p = (:Credential {cracked: true})-[:AssignedTo]->(u:User {enabled: true, hasspn: true}) RETURN p"
         }
       ]
     },
