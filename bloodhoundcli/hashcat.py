@@ -13,7 +13,7 @@ PATTERN = re.compile(r'\$HEX\[([^]]+?)\]')
 
 @click.command(help='Crack DCSync with multiple wordlists and rules')
 @click.argument('ntds', type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path), nargs=-1)
-@click.option('-p', '--potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.pot')
+@click.option('-p', '--potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.potfile')
 @click.option('-t', '--task', nargs=2, multiple=True)
 @click.option('--pre2k/--no-pre2k', is_flag=True, default=True)
 @click.option('--lmbrute/--no-lmbrute', is_flag=True, default=True)
@@ -73,7 +73,7 @@ def hashcat_ntds(ntds: list[str], potfile: Path, task: list[tuple[str, str]], pr
 
 @click.command(help='Print cracked passwords and decode $HEX encoding')
 @click.argument('hashfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path))
-@click.option('-p', '--potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.pot')
+@click.option('-p', '--potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.potfile')
 @click.option('--username', is_flag=True)
 @click.argument('mode', type=int)
 def hashcat_decode(hashfile: Path, potfile: Path, mode: int, username: bool) -> None:

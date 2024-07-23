@@ -15,7 +15,7 @@ DOMAIN_PATTERN = re.compile(r'^(?:(?:[a-z0-9-]+)\.)+(?:[a-z0-9-]+)$')
 
 @click.command(help='Import hashes and cracked passwords from DCSync')
 @click.argument('ntds', type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path), nargs=-1)
-@click.option('-p', '--potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.pot')
+@click.option('-p', '--potfile', type=click.Path(file_okay=True, dir_okay=False, path_type=Path), default=Path.home()/'.local/share/hashcat/hashcat.potfile')
 def import_ntds(ntds: list[Path], potfile: Path) -> None:
     neo4j = Database.from_env()
     neo4j.create_indices()
