@@ -553,7 +553,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User)-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-525' WITH COLLECT(u) AS x MATCH (u:User {enabled: true, sensitive: false, tier: 0}) WHERE NOT u in x RETURN u"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:User {enabled: true, sensitive: false, tier: 0}) RETURN p"
         }
       ]
     },
@@ -563,7 +563,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User)-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-525' WITH COLLECT(u) AS x MATCH (u:User {enabled: true, sensitive: false, highvalue: true}) WHERE NOT u in x RETURN u"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:User {enabled: true, sensitive: false, highvalue: true}) RETURN p"
         }
       ]
     },
@@ -734,6 +734,269 @@
         {
           "final": true,
           "query": "MATCH p = (u1:User {enabled: true})-[:HasCredential]->(:Credential)-[:AssignedTo]->(u2:User {enabled: true}) WHERE u1.domain<>u2.domain RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark active computers",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Computer {enabled: true}) WHERE (c.lastlogon > 0 AND datetime().epochseconds - c.lastlogon < 60*60*24*90) OR (c.lastlogontimestamp > 0 AND datetime().epochseconds - c.lastlogontimestamp < 60*60*24*90) SET c.active=true"
+        }
+      ]
+    },
+    {
+      "name": "Mark active users",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {enabled: true}) WHERE (u.lastlogon > 0 AND datetime().epochseconds - u.lastlogon < 60*60*24*90) OR (u.lastlogontimestamp > 0 AND datetime().epochseconds - u.lastlogontimestamp < 60*60*24*90) SET u.active=true"
+        }
+      ]
+    },
+    {
+      "name": "Connect objects with constrained delegation",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a) WHERE NOT a.allowedtodelegate IS NULL MATCH (b) WHERE a<>b AND any(s IN b.serviceprincipalnames WHERE s IN a.allowedtodelegate) MERGE p = (a)-[:AllowedToDelegate]->(b) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Connect service accounts to computers where they might be running",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User {hasspn: true}) MATCH (c:Computer) WHERE any(s IN u.serviceprincipalnames WHERE c.name=toUpper(split(s, '/')[1]) OR c.name=toUpper(split(s, '/')[1] + '.' + u.domain)) MERGE p = (c)-[:MaybeHasService]->(u) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag T0 objects",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (d:Domain) SET d.tier=0, d.highvalue=true RETURN d"
+        }
+      ]
+    },
+    {
+      "name": "Tag T0 groups",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) OR any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) SET x.tier=0, x.highvalue=true RETURN x"
+        }
+      ]
+    },
+    {
+      "name": "Tag valueable groups",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS', 'DHCP ADMINISTRATORS', 'ORGANIZATION MANAGEMENT', 'EXCHANGE TRUSTED SUBSYSTEM', 'EXCHANGE WINDOWS PERMISSIONS'] WHERE x.name STARTS WITH toUpper(y + '@')) OR any(y IN ['S-1-5-32-562', 'S-1-5-32-573', 'S-1-5-32-555', 'S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true RETURN x"
+        }
+      ]
+    },
+    {
+      "name": "Tag members of T0 groups (5 hops)",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {tier: 0}) WHERE (x:Group OR x:User OR x:Computer) SET x.tier=0, x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag members of valueable groups (5 hops)",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {highvalue: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag OUs containing T0 objects",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x:OU)-[:Contains*1..]->(y {tier: 0}) WHERE (y:OU OR y:Group OR y:User OR y:Computer) SET x.tier=0, x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag MSOL accounts as T0",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User) WHERE u.name STARTS WITH 'MSOL_' SET u.tier=0, u.highvalue=true RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Mark objects with direct paths to T0 as valuable",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a)-[]->(b {tier: 0}) WHERE coalesce(a.tier, 2)<>0 SET a.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark active computers without LAPS as valuable",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Computer)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS x MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {active: true, haslaps: false}) WHERE NOT c IN x AND toUpper(c.operatingsystem) STARTS WITH 'WINDOWS' SET c.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark computers with sessions of valuable users",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x:Computer)-[:HasSession]->(y:User) WHERE (y.tier=0 OR y.highvalue) SET x.highvalue=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Mark protected users as senstive",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (u:User)-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-525' SET u.sensitive=true RETURN u"
+        }
+      ]
+    },
+    {
+      "name": "Show T0",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->({tier: 0}) RETURN p UNION MATCH (p {tier: 0}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Generic tiering violations (5 hops)",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (x)-[]->(y) WHERE x.tier > y.tier OR (x.tier IS NULL AND y.tier < 2) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Users and computers violating T0 (5 hops)",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = shortestPath((x)-[*1..5]->(y:Domain)) WHERE x<>y AND (x:User OR x:Computer) AND coalesce(x.tier, 2)<>0 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Potentially interesting users and computers",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND any(x IN ['vmware', 'vcenter', 'vsphere', 'veeam', 'arcserve', 'commvault', 'backup', 'back', 'bak', 'bck', 'adm', 'admin', 'support', 'helpdesk', 'it', 'join', 'setup', 'inst', 'deploy', 'pki', 'ca', 'sccm'] WHERE toLower(o.samaccountname) CONTAINS x OR toLower(o.description) CONTAINS x) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag T2 OUs",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?2.*?' SET a.tier=2, b.tier=2 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag T1 OUs",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?1.*?' SET a.tier=1, b.tier=1 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag T0 OUs",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?0.*?' SET a.tier=0, b.tier=0 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Untagged OUs containing Windows clients",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS' AND NOT toUpper(c.operatingsystem) CONTAINS 'SERVER' RETURN p"
+
+        }
+      ]
+    },
+    {
+      "name": "Untagged OUs containing Windows servers",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS SERVER' RETURN p"
+
+        }
+      ]
+    },
+    {
+      "name": "Untagged OUs containing users",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(:User {enabled: true}) WHERE o.tier IS NULL RETURN p"
+
+        }
+      ]
+    },
+    {
+      "name": "Reset tiering tags",
+      "category": "AD Tiering",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a) SET a.tier=null, a.highvalue=null"
         }
       ]
     },
@@ -1138,261 +1401,8 @@
       ]
     },
     {
-      "name": "Mark active computers",
-      "category": "Post Processing",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (c:Computer {enabled: true}) WHERE (c.lastlogon > 0 AND datetime().epochseconds - c.lastlogon < 60*60*24*90) OR (c.lastlogontimestamp > 0 AND datetime().epochseconds - c.lastlogontimestamp < 60*60*24*90) SET c.active=true"
-        }
-      ]
-    },
-    {
-      "name": "Mark active users",
-      "category": "Post Processing",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (u:User {enabled: true}) WHERE (u.lastlogon > 0 AND datetime().epochseconds - u.lastlogon < 60*60*24*90) OR (u.lastlogontimestamp > 0 AND datetime().epochseconds - u.lastlogontimestamp < 60*60*24*90) SET u.active=true"
-        }
-      ]
-    },
-    {
-      "name": "Connect objects with constrained delegation",
-      "category": "Post Processing",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (a) WHERE NOT a.allowedtodelegate IS NULL MATCH (b) WHERE a<>b AND any(s IN b.serviceprincipalnames WHERE s IN a.allowedtodelegate) MERGE p = (a)-[:AllowedToDelegate]->(b) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Connect service accounts to computers where they might be running",
-      "category": "Post Processing",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (u:User {hasspn: true}) MATCH (c:Computer) WHERE any(s IN u.serviceprincipalnames WHERE c.name=toUpper(split(s, '/')[1]) OR c.name=toUpper(split(s, '/')[1] + '.' + u.domain)) MERGE p = (c)-[:MaybeHasService]->(u) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Mark computers with sessions of valuable users",
-      "category": "Post Processing",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (x:Computer)-[:HasSession]->(y:User) WHERE (y.tier=0 OR y.highvalue) SET x.highvalue=true RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Tag T2 OUs",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?2.*?' SET a.tier=2, b.tier=2 RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Tag T1 OUs",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?1.*?' SET a.tier=1, b.tier=1 RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Tag T0 OUs",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(a:OU)-[:Contains*1..]->(b) WHERE a.name=~'(?i)t(ier)?.?0.*?' SET a.tier=0, b.tier=0 RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Untagged OUs containing Windows clients",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS' AND NOT toUpper(c.operatingsystem) CONTAINS 'SERVER' RETURN p"
-
-        }
-      ]
-    },
-    {
-      "name": "Untagged OUs containing Windows servers",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS SERVER' RETURN p"
-
-        }
-      ]
-    },
-    {
-      "name": "Untagged OUs containing users",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(:User {enabled: true}) WHERE o.tier IS NULL RETURN p"
-
-        }
-      ]
-    },
-    {
-      "name": "Tag T0 objects",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (d:Domain) SET d.tier=0, d.highvalue=true RETURN d"
-        }
-      ]
-    },
-    {
-      "name": "Tag T0 groups",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) OR any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) SET x.tier=0, x.highvalue=true RETURN x"
-        }
-      ]
-    },
-    {
-      "name": "Tag valueable groups",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS', 'DHCP ADMINISTRATORS', 'ORGANIZATION MANAGEMENT', 'EXCHANGE TRUSTED SUBSYSTEM', 'EXCHANGE WINDOWS PERMISSIONS'] WHERE x.name STARTS WITH toUpper(y + '@')) OR any(y IN ['S-1-5-32-562', 'S-1-5-32-573', 'S-1-5-32-555', 'S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true RETURN x"
-        }
-      ]
-    },
-    {
-      "name": "Tag members of T0 groups (5 hops)",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {tier: 0}) WHERE (x:Group OR x:User OR x:Computer) SET x.tier=0, x.highvalue=true RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Tag members of valueable groups (5 hops)",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {highvalue: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Tag OUs containing T0 objects",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (x:OU)-[:Contains*1..]->(y {tier: 0}) WHERE (y:OU OR y:Group OR y:User OR y:Computer) SET x.tier=0, x.highvalue=true RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Tag MSOL accounts as T0",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (u:User) WHERE u.name STARTS WITH 'MSOL_' SET u.tier=0, u.highvalue=true RETURN u"
-        }
-      ]
-    },
-    {
-      "name": "Mark objects with direct paths to T0 as valuable",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (a)-[]->(b {tier: 0}) WHERE coalesce(a.tier, 2)<>0 SET a.highvalue=true RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Mark active computers without LAPS as valuable",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (c:Computer)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS x MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {active: true, haslaps: false}) WHERE NOT c IN x AND toUpper(c.operatingsystem) STARTS WITH 'WINDOWS' SET c.highvalue=true RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Potentially interesting users and computers",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND any(x IN ['vmware', 'vcenter', 'vsphere', 'veeam', 'arcserve', 'commvault', 'backup', 'back', 'bak', 'bck', 'adm', 'admin', 'support', 'helpdesk', 'it', 'join', 'setup', 'inst', 'deploy', 'pki', 'ca', 'sccm'] WHERE toLower(o.samaccountname) CONTAINS x OR toLower(o.description) CONTAINS x) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Show T0",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->({tier: 0}) RETURN p UNION MATCH (p {tier: 0}) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Generic tiering violations (5 hops)",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (x)-[]->(y) WHERE x.tier > y.tier OR (x.tier IS NULL AND y.tier < 2) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Show users and computers violating T0 (5 hops)",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = shortestPath((x)-[*1..5]->(y:Domain)) WHERE x<>y AND (x:User OR x:Computer) AND coalesce(x.tier, 2)<>0 RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Reset tiering tags",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (a) SET a.tier=null, a.highvalue=null"
-        }
-      ]
-    },
-    {
       "name": "Mark T0 objects",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1402,27 +1412,27 @@
     },
     {
       "name": "Mark T0 roles",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Administrator|Cloud Application Administrator|Directory Synchronization Accounts|Global Administrator|Intune Administrator|Privileged Authentication Administrator|Privileged Role Administrator|User Administrator' SET r.tier=0, r.highvalue=true RETURN r"
+          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Administrator|Cloud Application Administrator|Directory Synchronization Accounts|Domain Name Administrator|External Identity Provider Administrator|Global Administrator|Hybrid Identity Administrator|Intune Administrator|Partner Tier1 Support|Partner Tier2 Support|Privileged Authentication Administrator|Privileged Role Administrator|Security Administrator|User Administrator' SET r.tier=0, r.highvalue=true RETURN r"
         }
       ]
     },
     {
       "name": "Mark valueable roles",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Administrator|Application Developer|Attribute Assignment Administrator|Attribute Assignment Reader|Attribute Definition Administrator|Attribute Definition Reader|Attribute Log Administrator|Authentication Administrator|Authentication Extensibility Administrator|Authentication Policy Administrator|B2C IEF Keyset Administrator|B2C IEF Policy Administrator|Billing Administrator|Cloud Application Administrator|Cloud App Security Administrator|Cloud Device Administrator|Compliance Data Administrator|Conditional Access Administrator|Device Managers|Directory Synchronization Accounts|Directory Writers|Domain Name Administrator|Exchange Administrator|Extended Directory User Administrator|External ID User Flow Administrator|External ID User Flow Attribute Administrator|External Identity Provider Administrator|Global Administrator|Global Reader|Global Secure Access Administrator|Groups Administrator|Helpdesk Administrator|Hybrid Identity Administrator|Identity Governance Administrator|Intune Administrator|Knowledge Administrator|Knowledge Manager|License Administrator|Lifecycle Workflows Administrator|Organizational Branding Administrator|Partner Tier1 Support|Partner Tier2 Support|Password Administrator|Permissions Management Administrator|Privileged Authentication Administrator|Privileged Role Administrator|Security Administrator|Security Operator|Security Reader|Teams Administrator|User Administrator|Windows 365 Administrator|Windows Update Deployment Administrator' SET r.highvalue=true RETURN r"
+          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Developer|Attribute Assignment Administrator|Attribute Assignment Reader|Attribute Definition Administrator|Attribute Definition Reader|Attribute Log Administrator|Authentication Administrator|Authentication Extensibility Administrator|Authentication Policy Administrator|Azure DevOps Administrator|B2C IEF Keyset Administrator|B2C IEF Policy Administrator|Billing Administrator|Cloud App Security Administrator|Cloud Device Administrator|Compliance Data Administrator|Conditional Access Administrator|Device Managers|Directory Writers|Exchange Administrator|Extended Directory User Administrator|External ID User Flow Administrator|External ID User Flow Attribute Administrator|Global Reader|Global Secure Access Administrator|Groups Administrator|Helpdesk Administrator|Identity Governance Administrator|Knowledge Administrator|Knowledge Manager|License Administrator|Lifecycle Workflows Administrator|Microsoft Entra Joined Device Local Administrator|Organizational Branding Administrator|Partner Tier1 Support|Password Administrator|Permissions Management Administrator|Security Operator|Security Reader|SharePoint Administrator|Teams Administrator|Windows 365 Administrator|Windows Update Deployment Administrator|Yammer Administrator' SET r.highvalue=true RETURN r"
         }
       ]
     },
     {
-      "name": "Mark users in T0 roles (10 hops)",
-      "category": "Azure Tiering",
+      "name": "Mark users with T0 roles (10 hops)",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1431,8 +1441,8 @@
       ]
     },
     {
-      "name": "Mark users in valueable roles (10 hops)",
-      "category": "Azure Tiering",
+      "name": "Mark users with valueable roles (10 hops)",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1442,7 +1452,7 @@
     },
     {
       "name": "Mark owners of subscriptions as T0",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1452,17 +1462,17 @@
     },
     {
       "name": "Mark service principals with privileged MS Graph app role assignments",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (a:AZServicePrincipal)-[:AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGDirectory_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGOrganization_ReadWrite_All|AZMGPolicy_ReadWrite_AuthenticationMethod|AZMGPolicy_ReadWrite_AuthenticationMethod|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All|AZMGUserAuthenticationMethod_ReadWrite_All|AZMGUser_ManageIdentities_All|AZMGUser_ReadWrite_All]->(b:AZServicePrincipal) WHERE b.name STARTS WITH 'MICROSOFT GRAPH@' SET a.highvalue=true RETURN p"
+          "query": "MATCH p = (a:AZServicePrincipal)-[:AZMGAdministrativeUnit_ReadWrite_All|AZMGAppRoleAssignment_ReadWrite_All|AZMGApplication_ReadWrite_All|AZMGApplication_ReadWrite_OwnedBy|AZMGDirectory_ReadWrite_All|AZMGDomain_ReadWrite_All|AZMGEntitlementManagement_ReadWrite_All|AZMGGroupMember_ReadWrite_All|AZMGGroup_ReadWrite_All|AZMGOrganization_ReadWrite_All|AZMGPolicy_ReadWrite_AuthenticationMethod|AZMGPolicy_ReadWrite_PermissionGrant|AZMGPrivilegedAccess_ReadWrite_AzureADGroup|AZMGPrivilegedAssignmentSchedule_ReadWrite_AzureADGroup|AZMGPrivilegedEligibilitySchedule_ReadWrite_AzureADGroup|AZMGRoleAssignmentSchedule_ReadWrite_Directory|AZMGRoleEligibilitySchedule_ReadWrite_Directory|AZMGRoleManagementPolicy_ReadWrite_AzureADGroup|AZMGRoleManagementPolicy_ReadWrite_Directory|AZMGRoleManagement_ReadWrite_Directory|AZMGServicePrincipalEndpoint_ReadWrite_All|AZMGUserAuthenticationMethod_ReadWrite_All|AZMGUser_ManageIdentities_All|AZMGUser_ReadWrite_All]->(b:AZServicePrincipal) WHERE b.name STARTS WITH 'MICROSOFT GRAPH@' SET a.highvalue=true RETURN p"
         }
       ]
     },
     {
       "name": "Mark apps that are running as T0 service principal",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1472,7 +1482,7 @@
     },
     {
       "name": "Mark apps that are running as valueable service principal",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1482,7 +1492,7 @@
     },
     {
       "name": "Mark owners of T0 applications",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1492,7 +1502,7 @@
     },
     {
       "name": "Mark owners of valueable applications",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1502,7 +1512,7 @@
     },
     {
       "name": "Mark owners of any application as valueable",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1512,7 +1522,7 @@
     },
     {
       "name": "Mark objects with direct control over the tenant as valueable (e.g. AZMGGrantAppRoles)",
-      "category": "Azure Tiering",
+      "category": "Azure Post Processing",
       "queryList": [
         {
           "final": true,
@@ -1522,7 +1532,7 @@
     },
     {
       "name": "Show T0",
-      "category": "Azure Tiering",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1532,7 +1542,7 @@
     },
     {
       "name": "Principals without Azure role but with RBAC role User Access Administrator (10 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1542,7 +1552,7 @@
     },
     {
       "name": "Paths into T0 (10 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1552,7 +1562,7 @@
     },
     {
       "name": "Paths to valueable targets (10 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1562,7 +1572,7 @@
     },
     {
       "name": "Paths to high value roles (10 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1572,7 +1582,7 @@
     },
     {
       "name": "Paths from applications to high value targets (10 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1582,7 +1592,7 @@
     },
     {
       "name": "Paths to VMs excluding T0 (3 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1592,7 +1602,7 @@
     },
     {
       "name": "Paths to key vaults excluding T0 (3 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1602,7 +1612,7 @@
     },
     {
       "name": "Paths to ressource groups excluding T0 (3 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1612,7 +1622,7 @@
     },
     {
       "name": "Paths to subscriptions excluding T0 (3 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1622,7 +1632,7 @@
     },
     {
       "name": "Owners of groups",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1632,7 +1642,7 @@
     },
     {
       "name": "Paths from principals without an Azure role but the RBAC role User Access Administrator to resources (10 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
@@ -1642,7 +1652,7 @@
     },
     {
       "name": "Paths from guests to valueable objects (3 hops)",
-      "category": "Azure Paths",
+      "category": "Azure Escalation",
       "queryList": [
         {
           "final": true,
