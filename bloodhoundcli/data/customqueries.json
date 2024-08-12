@@ -863,7 +863,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (c:Computer)-[:MemberOf*1..10]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS x MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {active: true, haslaps: false}) WHERE NOT c IN x AND toUpper(c.operatingsystem) STARTS WITH 'WINDOWS' SET c.highvalue=true RETURN p"
+          "query": "MATCH (c:Computer)-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS x MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {active: true, haslaps: false}) WHERE tolower(c.operatingsystem) CONTAINS 'windows' AND NOT c IN x AND NOT any(spn IN c.serviceprincipalnames WHERE tolower(spn) STARTS WITH 'msclustervirtualserver/') SET c.highvalue=true RETURN p"
         }
       ]
     },
