@@ -1401,6 +1401,16 @@
       ]
     },
     {
+      "name": "Fix object names",
+      "category": "Azure Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (o) WHERE (o.name IS NULL OR o.name='placeholder') AND o.displayname IS NOT NULL SET o.name=o.displayname RETURN o"
+        }
+      ]
+    },
+    {
       "name": "Mark T0 objects",
       "category": "Azure Post Processing",
       "queryList": [
