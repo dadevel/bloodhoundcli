@@ -75,13 +75,18 @@ def import_ntds_cleartext(neo4j: Database, domain: str, cleardb: dict[str, str])
     print(f'updated {count} credential relationships')
 
 
-def import_ntds_internal(neo4j: Database, domain: str, ntdsdb: dict[str, list[NtdsEntry]]) -> None:
+def import_ntds_internal(neo4j: Database, domain: str, ntdsdb: list[NtdsEntry]) -> None:
+    # when multiple lm hashes map to the same nt hash, all except the last lm hash are lost
+    # to reduce the risk the empty lm hash is filtered out
     count = sum(neo4j.execute(
-        'UNWIND $rows AS row MERGE (c:Base:Container:Credential {objectid: row[0]}) SET c.nthash=row[0], c.lmhash=row[1], c.name=row[2] RETURN count(c)',
+        'UNWIND $rows AS row MERGE (c:Base:Container:Credential {objectid: row[0]}) SET c.nthash=row[0], c.lmhash=coalesce(c.lmhash, coalesce(row[1], c.lmhash)), c.name=row[2] RETURN count(c)',
         rows=[
-            [entry['nthash'], entry['lmhash'], 'NT Hash']
-            for entries in ntdsdb.values()
-            for entry in entries
+            [
+                entry['nthash'],
+                None if entry['lmhash'] == 'aad3b435b51404eeaad3b435b51404ee' else entry['lmhash'],
+                'NT Hash',
+            ]
+            for entry in ntdsdb
         ],
     ))
     print(f'updated {count} NT hashes')
@@ -89,31 +94,29 @@ def import_ntds_internal(neo4j: Database, domain: str, ntdsdb: dict[str, list[Nt
         'UNWIND $rows AS row MATCH (c:Credential {objectid: row[0]}) MATCH (o {domain: row[1], samaccountname: row[2]}) WHERE o:User OR o:Computer MERGE (o)-[r:HasCredential]->(c) MERGE (c)-[s:AssignedTo]->(o) RETURN count(r) + count(s)',
         rows=[
             [entry['nthash'], domain.upper(), entry['user']]
-            for entries in ntdsdb.values()
-            for entry in entries
+            for entry in ntdsdb
         ],
     ))
     print(f'updated {count} credential relationships')
 
 
-def import_potfile(neo4j: Database, domain: str, ntdsdb: dict[str, list[NtdsEntry]], potdb: dict[str, str]) -> None:
+def import_potfile(neo4j: Database, domain: str, ntdsdb: list[NtdsEntry], potdb: dict[str, str]) -> None:
     # TODO: import cracked lm passwords into neo4j
     count = sum(neo4j.execute(
         'UNWIND $rows AS row MERGE (c:Base:Container:Credential {objectid: row[0]}) SET c.nthash=row[0], c.password=row[1], c.cracked=true, c.name=row[2] RETURN count(c)',
         rows=[
-            [nthash, potdb.get(nthash), 'Cracked NT Hash']
-            for nthash in ntdsdb.keys()
-            if potdb.get(nthash)  # uncracked hashes are already handled by import_ntds()
+            [entry['nthash'], potdb.get(entry['nthash']), 'Cracked NT Hash']
+            for entry in ntdsdb
+            if potdb.get(entry['nthash'])  # uncracked hashes are already handled by import_ntds()
         ],
     ))
     print(f'updated {count} cracked NT hashes')
     count = sum(neo4j.execute(
         'UNWIND $rows AS row MATCH (c:Credential {objectid: row[0]}) MATCH (o {domain: row[1], samaccountname: row[2]}) WHERE o:User OR o:Computer MERGE (o)-[r:HasCredential]->(c) MERGE (c)-[s:AssignedTo]->(o) RETURN count(r) + count(s)',
         rows=[
-            [nthash, domain.upper(), entry['user']]
-            for nthash, entries in ntdsdb.items()
-            if potdb.get(nthash)
-            for entry in entries
+            [entry['nthash'], domain.upper(), entry['user']]
+            for entry in ntdsdb
+            if potdb.get(entry['nthash'])
         ],
     ))
     print(f'updated {count} credential relationships')
@@ -134,9 +137,9 @@ def parse_ntds_cleartext(file: TextIO) -> dict[str, str]:
     return result
 
 
-def parse_ntds(file: TextIO) -> dict[str, list[NtdsEntry]]:
+def parse_ntds(file: TextIO) -> list[NtdsEntry]:
     """Returns mapping from nthash to NTDS entry."""
-    result = defaultdict(list)
+    result = []
     pattern = re.compile(r'^(?:(?P<domain>[^\:]+?)\\)?(?P<user>[^:]+?):[^:]+?:(?P<lmhash>[^:]+?):(?P<nthash>[^:]+?):')
     for linenum, line in enumerate(file, start=1):
         line = line.rstrip()
@@ -145,7 +148,7 @@ def parse_ntds(file: TextIO) -> dict[str, list[NtdsEntry]]:
             print(f'{file.name}:{linenum}: invalid line: {line}', file=sys.stderr)
             continue
         entry = match.groupdict()
-        result[entry['nthash']].append(entry)
+        result.append(entry)
     return result
 
 

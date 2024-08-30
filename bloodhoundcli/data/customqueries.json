@@ -883,7 +883,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User)-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-525' SET u.sensitive=true RETURN u"
+          "query": "MATCH p = (u:User)-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-525' SET u.sensitive=true RETURN p"
         }
       ]
     },
