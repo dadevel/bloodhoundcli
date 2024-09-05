@@ -81,12 +81,42 @@
       ]
     },
     {
+      "name": "Session escalation paths",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (c:Computer {enabled: true})-[:HasSession]->(u:User) WHERE coalesce(c.tier, 2)<coalesce(u.tier, 2) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Session tiering violations",
       "category": "Admin Hunt",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (c:Computer {enabled: true})-[:HasSession]->(u:User) WHERE c.tier<>u.tier OR (c.tier IS NULL AND u.tier < 2) OR (c.tier > 0 AND u.tier IS NULL) RETURN p"
+          "query": "MATCH p = (c:Computer {enabled: true})-[:HasSession]->(u:User) WHERE coalesce(c.tier, 2)>coalesce(u.tier, 2) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Sessions of T0 users",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Computer)-[:HasSession]->(:User {highvalue: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Sessions on T0 computers",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Computer {tier: 0})-[:HasSession]->(:User) RETURN p"
         }
       ]
     },
@@ -101,6 +131,16 @@
       ]
     },
     {
+      "name": "Sessions on valuable computers",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Computer {highvalue: true})-[:HasSession]->(:User) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Sessions on legacy computers",
       "category": "Admin Hunt",
       "queryList": [
@@ -111,19 +151,22 @@
       ]
     },
     {
-      "name": "Sessions of specific user",
+      "name": "Service accounts with sessions (5 hops)",
       "category": "Admin Hunt",
-      "requireNodeSelect": true,
       "queryList": [
         {
-          "final": false,
-          "title": "Select user...",
-          "query": "MATCH (u:User {enabled: true}) RETURN u.name ORDER BY u.name"
-        },
+          "final": true,
+          "query": "MATCH p = (:User {hasspn: true})<-[:HasSession]-(:Computer) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Members of protected users (5 hops)",
+      "category": "Admin Hunt",
+      "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Computer)-[:HasSession]->(:User {name: $result}) RETURN p",
-          "startNode": "{}"
+          "query": "MATCH p = (:User {enabled: true})-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-525' RETURN p"
         }
       ]
     },
@@ -738,7 +781,7 @@
       ]
     },
     {
-      "name": "Mark active computers",
+      "name": "Mark active computers (no output)",
       "category": "AD Post Processing",
       "queryList": [
         {
@@ -748,7 +791,7 @@
       ]
     },
     {
-      "name": "Mark active users",
+      "name": "Mark active users (no output)",
       "category": "AD Post Processing",
       "queryList": [
         {
@@ -774,6 +817,16 @@
         {
           "final": true,
           "query": "MATCH (u:User {hasspn: true}) MATCH (c:Computer) WHERE any(s IN u.serviceprincipalnames WHERE c.name=toUpper(split(s, '/')[1]) OR c.name=toUpper(split(s, '/')[1] + '.' + u.domain)) MERGE p = (c)-[:MaybeHasService]->(u) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Add reverse sessions (no output)",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (c:Computer)-[:HasSession]->(u:User) MERGE (u)-[:HasSession]->(c)"
         }
       ]
     },
@@ -1001,46 +1054,6 @@
       ]
     },
     {
-      "name": "T0 users that never logged on",
-      "category": "Audit",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier: 0}) WHERE coalesce(u.lastlogon, 0) <= 0 AND coalesce(u.lastlogontimestamp, 0) <= 0 RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Enabled users that never logged on",
-      "category": "Audit",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE coalesce(u.lastlogon, 0) <= 0 AND coalesce(u.lastlogontimestamp, 0) <= 0 RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "T0 users without logon since 90 days",
-      "category": "Audit",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier: 0}) WHERE NOT coalesce(u.active, false) RETURN p"
-        }
-      ]
-    },
-    {
-      "name": "Enabled users without logon since 90 days",
-      "category": "Audit",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE NOT coalesce(u.active, false) AND (coalesce(u.lastlogon, 0) > 0 OR coalesce(u.lastlogontimestamp, 0) > 0) RETURN p"
-        }
-      ]
-    },
-    {
       "name": "T0 users that never set a password",
       "category": "Audit",
       "queryList": [
@@ -1151,7 +1164,7 @@
       ]
     },
     {
-      "name": "Direct members of pre-windows 2000 compatible access group",
+      "name": "Direct members of pre-windows 2000 group",
       "category": "Audit",
       "queryList": [
         {
@@ -1171,12 +1184,12 @@
       ]
     },
     {
-      "name": "Disabled users",
+      "name": "Active computers with legacy OS",
       "category": "Audit",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:User {enabled: false}) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {active: true}) WHERE c.operatingsystem =~ '(?i)Windows.*?(2000|2003|2008|me|xp|vista|7|8).*?' RETURN p"
         }
       ]
     },
@@ -1201,8 +1214,68 @@
       ]
     },
     {
-      "name": "T0 computers without logon",
+      "name": "Active computers without password change since 90 days",
       "category": "Audit",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {active: true}) WHERE c.pwdlastset <= 0 OR datetime().epochseconds - c.pwdlastset > 60*60*24*90 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "T0 users without logon",
+      "category": "Stale Objects",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier: 0}) WHERE coalesce(u.lastlogon, 0) <= 0 AND coalesce(u.lastlogontimestamp, 0) <= 0 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users without logon",
+      "category": "Stale Objects",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE coalesce(u.lastlogon, 0) <= 0 AND coalesce(u.lastlogontimestamp, 0) <= 0 RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "T0 users without logon since 90 days",
+      "category": "Stale Objects",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true, tier: 0}) WHERE NOT coalesce(u.active, false) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Enabled users without logon since 90 days",
+      "category": "Stale Objects",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE NOT coalesce(u.active, false) AND (coalesce(u.lastlogon, 0) > 0 OR coalesce(u.lastlogontimestamp, 0) > 0) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Disabled users",
+      "category": "Stale Objects",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:User {enabled: false}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "T0 computers without logon",
+      "category": "Stale Objects",
       "queryList": [
         {
           "final": true,
@@ -1212,7 +1285,7 @@
     },
     {
       "name": "Enabled computers without logon",
-      "category": "Audit",
+      "category": "Stale Objects",
       "queryList": [
         {
           "final": true,
@@ -1222,7 +1295,7 @@
     },
     {
       "name": "T0 computers without logon since 90 days",
-      "category": "Audit",
+      "category": "Stale Objects",
       "queryList": [
         {
           "final": true,
@@ -1232,7 +1305,7 @@
     },
     {
       "name": "Enabled computers without logon since 90 days",
-      "category": "Audit",
+      "category": "Stale Objects",
       "queryList": [
         {
           "final": true,
@@ -1242,11 +1315,11 @@
     },
     {
       "name": "Disabled computers",
-      "category": "Audit",
+      "category": "Stale Objects",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: false})"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: false}) RETURN p"
         }
       ]
     },
