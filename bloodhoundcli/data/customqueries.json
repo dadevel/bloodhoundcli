@@ -451,6 +451,16 @@
       ]
     },
     {
+      "name": "Regular users with paths to disabled computers (3 hops)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (o)-[:AllExtendedRights|GenericAll|GenericWrite|Owns|WriteAccountRestrictions|WriteDacl|WriteOwner|WriteProperty|MemberOf*1..3]->(:Computer {enabled: false}) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (coalesce(o.tier, 3)>=2 OR NOT o.highvalue) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Regular users owning objects",
       "category": "Escalation",
       "queryList": [
