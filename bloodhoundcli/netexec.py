@@ -45,18 +45,24 @@ def pre_process_computer_row(ip: str, hostname: str, domain: str, os: str, signi
 
 def import_users(nxcdb: sqlite3.Connection, neo4j: Database) -> None:
     print('importing users...')
-    cursor = nxcdb.execute('SELECT upper(u.domain), upper(u.username), u.password, u.credtype, upper(h.hostname), upper(h.domain), a.hostid=h.id AS isadmin FROM users AS u, hosts AS h, admin_relations AS a WHERE u.id=a.userid')
+
     local_user_count, admin_edge_count = 0, 0
-    for userdomain, username, secret, secret_type, hostname, hostdomain, is_admin in cursor:
+  
+    # Import users
+    cursor = nxcdb.execute('SELECT u.id, upper(u.domain), upper(u.username), u.password, u.credtype FROM users AS u')
+    for userid, userdomain, username, secret, secret_type in cursor:
         is_domain_user = '.' in userdomain
-        is_domain_computer = '.' in hostdomain
-        if is_domain_computer:
-            fqdn = f'{hostname}.{hostdomain}'
-        else:
-            fqdn = hostname
         if is_domain_user:
             upn = f'{username}@{userdomain}'
         else:
+            # It's a local user. Hence, we have to find its host based on the hostname in the column `users.domain`.
+            hostname, hostdomain = nxcdb.execute('SELECT h.hostname, h.domain FROM users AS u JOIN hosts AS h ON lower(u.domain) = lower(h.hostname) WHERE u.id = ?', (int(userid),)).fetchone()
+            is_domain_computer = '.' in hostdomain
+            if is_domain_computer:
+                fqdn = f'{hostname}.{hostdomain}'
+            else:
+                fqdn = hostname
+
             upn = f'{username}@{fqdn}'
 
         if not is_domain_user:
@@ -72,11 +78,27 @@ def import_users(nxcdb: sqlite3.Connection, neo4j: Database) -> None:
         else:
             password = None
             password_hash = secret
-        neo4j.execute('MERGE (c:Base:Container:Credential {objectid: $nthash}) SET c.nthash=$nthash, c.password=$password, c.name=coalesce(c.name, $name)', nthash=password_hash, password=password, name='Plain Password' if password else 'NT Hash')
-        neo4j.execute('MATCH (u:User {name: $username}) MATCH (c:Credential {objectid: $nthash}) MERGE (u)-[:HasCredential]->(c) MERGE (c)-[:AssignedTo]->(u)', username=upn, nthash=password_hash)
 
-        if is_admin:
-            neo4j.execute('MATCH (u:User {name: $username}) MATCH (c:Computer {name: $computername}) MERGE (u)-[:AdminTo]->(c)', username=upn, computername=fqdn)
-            admin_edge_count += 1
+        neo4j.execute('MERGE (c:Base:Container:Credential {objectid: $nthash}) SET c.nthash=$nthash, c.password=$password, c.name=coalesce(c.name, $name)', nthash=password_hash, password=password, name='Plain Password' if password else 'NT Hash')
+        neo4j.execute('MATCH (u:User) WHERE u.name =~ "(?i)" + $username MATCH (c:Credential) WHERE c.objectid =~ "(?i)" + $nthash MERGE (u)-[:HasCredential]->(c) MERGE (c)-[:AssignedTo]->(u)', username=upn, nthash=password_hash)
+
+    # Mark admins to computers
+    cursor = nxcdb.execute('SELECT u.username, u.domain, h.hostname, h.domain FROM admin_relations AS a JOIN users as u ON a.userid = u.id JOIN hosts AS h ON a.hostid = h.id')
+    for username, userdomain, hostname, hostdomain in cursor:
+        is_domain_user = '.' in userdomain
+        is_domain_computer = '.' in hostdomain
+
+        if is_domain_computer:
+            fqdn = f'{hostname}.{hostdomain}'
+        else:
+            fqdn = hostname
+
+        if is_domain_user:
+            upn = f'{username}@{userdomain}'
+        else:
+            upn = f'{username}@{fqdn}'
+
+        neo4j.execute('MATCH (u:User) WHERE u.name =~ "(?i)" + $username MATCH (c:Computer) WHERE c.name =~ "(?i)" + $computername MERGE (u)-[:AdminTo]->(c)', username=upn, computername=fqdn)
+        admin_edge_count += 1
 
     print(f'imported {local_user_count} local users and {admin_edge_count} admin relationships')
