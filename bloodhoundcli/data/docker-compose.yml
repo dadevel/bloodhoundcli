@@ -42,6 +42,7 @@ services:
 
   bloodhound:
     image: docker.io/specterops/bloodhound:latest
+    pull_policy: always
     environment:
       bhe_neo4j_connection: neo4j://neo4j:@neo4j:7687/
       bhe_database_connection: host=postgres user=postgres password= dbname=postgres

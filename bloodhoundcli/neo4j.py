@@ -84,14 +84,20 @@ class Database:
             self.execute(f"MATCH ()-[r:{edge_type}]->() SET r.cost=$weight", weight=self.DEFAULT_WEIGHT if weight is None else weight)
 
     def create_indices(self) -> None:
+        print('indexing user names')
         self.execute('CREATE INDEX ad_user_name_index IF NOT EXISTS FOR (u:User) ON (u.name)')
+        print('indexing computer names')
         self.execute('CREATE INDEX ad_computer_name_index IF NOT EXISTS FOR (c:Computer) ON (c.name)')
+        print('indexing user domains')
         self.execute('CREATE INDEX ad_user_domain_index IF NOT EXISTS FOR (u:User) ON (u.domain)')
+        print('indexing computer domains')
         self.execute('CREATE INDEX ad_computer_domain_index IF NOT EXISTS FOR (c:Computer) ON (c.domain)')
+        print('indexing user samaccountnames')
         self.execute('CREATE INDEX ad_user_samaccountname_index IF NOT EXISTS FOR (u:User) ON (u.samaccountname)')
+        print('indexing computer samaccountnames')
         self.execute('CREATE INDEX ad_computer_samaccountname_index IF NOT EXISTS FOR (c:Computer) ON (c.samaccountname)')
+        print('indexing credential object ids')
         self.execute('CREATE INDEX ad_credential_objectid_index IF NOT EXISTS FOR (c:Credential) ON (c.objectid)')
-
 
 
 @click.command(help='Execute Cypher statement')
@@ -168,21 +174,30 @@ def generate_words(value: str, reverse: bool = False) -> Generator[str, None, No
 @click.command(help='Print wordlist based on object names and descriptions')
 def generate_wordlist() -> None:
     db = Database.from_env()
+
+    # add passwords
+    for line in db.execute('MATCH (c:Credential) WHERE c.password IS NOT NULL RETURN c.password'):
+        print(line)
+
     words = set()
 
     # add names and descriptions of users, computers, groups and OUs
     for line in db.execute('MATCH (o) WHERE (o:User OR o:Computer OR o:Group) AND o.samaccountname IS NOT NULL RETURN o.samaccountname AS line UNION MATCH (o) WHERE (o:OU OR o:Domain) AND o.name IS NOT NULL AND o.domain IS NOT NULL AND size(o.name) > size(o.domain) RETURN DISTINCT left(o.name, size(o.name) - size(o.domain) - 1) AS line UNION MATCH (o) WHERE o.description IS NOT NULL RETURN o.description AS line'):
         if not line:
             continue
+        if isinstance(line, list):
+            line = ' '.join(line)
         if line.endswith('$'):
             line = line.rstrip('$')
+        words.update(generate_words(line))
         for part in line.split(' '):
             words.update(generate_words(part))
 
     # add reverse username, 'alice' would become 'ecila'
-    for line in db.execute('MATCH (u:User) WHERE u.samaccountname IS NOT NULL RETURN u.samaccountname AS line'):
+    for line in db.execute('MATCH (u:User) WHERE u.samaccountname IS NOT NULL RETURN u.samaccountname'):
         if not line:
             continue
+        words.update(generate_words(line, reverse=True))
         for part in line.split(' '):
             words.update(generate_words(part, reverse=True))
 

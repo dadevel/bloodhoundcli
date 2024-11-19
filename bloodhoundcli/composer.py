@@ -71,6 +71,7 @@ def install_custom_queries_bh_legacy() -> None:
             # queries already installed
             return
         if not dest_path.exists():
+            dest_path.parent.mkdir(exist_ok=True)
             os.symlink(src_path, dest_path)
             return
         print('warning: wont install custom queries, there is already a file present')

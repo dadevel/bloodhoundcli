@@ -20,9 +20,13 @@ def import_ntds(ntds: list[Path], potfile: Path) -> None:
     neo4j = Database.from_env()
     neo4j.create_indices()
 
-    with open(potfile, 'r') as file:
-        potdb = parse_potfile(file)
-    print(f'loaded {len(potdb)} cracked hashes from {potfile}', file=sys.stderr)
+    try:
+        with open(potfile, 'r') as file:
+            potdb = parse_potfile(file)
+        print(f'loaded {len(potdb)} cracked hashes from {potfile}', file=sys.stderr)
+    except Exception as e:
+        potdb = {}
+        print(f'error: failed to load potfile: {e}')
 
     for path in ntds:
         if not path.suffix == '.ntds':

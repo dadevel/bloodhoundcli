@@ -236,7 +236,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Client Authentication`: true, `Enrollee Supplies Subject`: true, `Requires Manager Approval`: false}) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
+          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Client Authentication`: true, `Enrollee Supplies Subject`: true, `Requires Manager Approval`: false})-[:EnabledBy]->(:CA) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
         }
       ]
     },
@@ -246,7 +246,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Any Purpose`: true, `Requires Manager Approval`: false}) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
+          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Any Purpose`: true, `Requires Manager Approval`: false})-[:EnabledBy]->(:CA) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
         }
       ]
     },
@@ -256,7 +256,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Enrollment Agent`: true, `Requires Manager Approval`: false}) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
+          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Enrollment Agent`: true, `Requires Manager Approval`: false})-[:EnabledBy]->(:CA) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
         }
       ]
     },
@@ -266,7 +266,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true}) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND NOT (r:EnabledBy OR r:Read OR r:ManageCa OR r:ManageCertificates OR r:Enroll OR r:AutoEnroll) RETURN p"
+          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true})-[:EnabledBy]->(:CA) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND NOT (r:EnabledBy OR r:Read OR r:ManageCa OR r:ManageCertificates OR r:Enroll OR r:AutoEnroll) RETURN p"
         }
       ]
     },
@@ -316,7 +316,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Client Authentication`: true}) WHERE 'NoSecurityExtension' IN t.`Enrollment Flag` AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND NOT (r:EnabledBy OR r:Read OR r:ManageCa OR r:ManageCertificates) RETURN p"
+          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Client Authentication`: true})-[:EnabledBy]->(:CA) WHERE 'NoSecurityExtension' IN t.`Enrollment Flag` AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND NOT (r:EnabledBy OR r:Read OR r:ManageCa OR r:ManageCertificates) RETURN p"
         }
       ]
     },
@@ -501,12 +501,32 @@
       ]
     },
     {
-      "name": "Computers with local admin rights (10 hops)",
+      "name": "Exchange permissions (3 hops)",
+      "category": "Escalation",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = ()-[:MemberOf*1..3]->(x:Group) WHERE any(y IN ['EXCHANGE TRUSTED SUBSYSTEM', 'EXCHANGE WINDOWS PERMISSIONS', 'ORGANIZATION MANAGEMENT', 'SECURITY ADMINISTRATOR'] WHERE x.name STARTS WITH y + '@') RETURN p UNION MATCH (o:OU)-[:Contains]->(g:Group) WHERE o.name STARTS WITH 'MICROSOFT EXCHANGE SECURITY GROUPS@' MATCH p = ()-[:MemberOf*1..3]->(g) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Computers in valueable groups (3 hops)",
       "category": "NTLM Relaying",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Computer {enabled: true})-[:AdminTo]->(:Computer {enabled: true}) RETURN p UNION MATCH p = (:Computer {enabled: true})-[:MemberOf*1..10]->(:Group)-[:AdminTo]->(:Computer {enabled: true}) RETURN p"
+          "query": "MATCH p = (:Computer {enabled: true})-[:MemberOf*1..3]->(:Group {highvalue: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Computers with local admin rights (5 hops)",
+      "category": "NTLM Relaying",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Computer {enabled: true})-[:AdminTo]->(:Computer {enabled: true}) RETURN p UNION MATCH p = (:Computer {enabled: true})-[:MemberOf*1..5]->(:Group)-[:AdminTo]->(:Computer {enabled: true}) RETURN p"
         }
       ]
     },
@@ -631,16 +651,6 @@
       ]
     },
     {
-      "name": "Users or computers with custom SPNs",
-      "category": "Escalation",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c {enabled: true}) WHERE any(x IN c.serviceprincipalnames WHERE NOT toUpper(x) STARTS WITH 'HOST/' AND NOT x STARTS WITH 'WSMAN/' AND NOT x STARTS WITH 'RestrictedKrbHost/' AND NOT x STARTS WITH 'TERMSRV/' AND NOT x STARTS WITH 'DNS/' AND NOT x STARTS WITH 'GC/' AND NOT toUpper(x) STARTS WITH 'LDAP/' AND NOT x STARTS WITH 'MSSQLSvc/' AND NOT x STARTS WITH 'MSServerCluster/' AND NOT x STARTS WITH 'MSClusterVirtualServer/' AND NOT x STARTS WITH 'MSServerClusterMgmtAPI/') RETURN p"
-        }
-      ]
-    },
-    {
       "name": "GPO tiering violations",
       "category": "GPOs",
       "queryList": [
@@ -706,7 +716,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c {enabled: true}) WHERE any(x IN c.serviceprincipalnames WHERE x STARTS WITH 'MSSQLSvc/' OR x STARTS WITH 'MSServerCluster/' OR x STARTS WITH 'MSClusterVirtualServer/' OR x STARTS WITH 'MSServerClusterMgmtAPI/') RETURN p UNION MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true})<-[:SQLAdmin]-(o) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c {enabled: true}) WHERE (c:User OR c:Computer) AND any(x IN c.serviceprincipalnames WHERE x STARTS WITH 'MSSQLSvc/' OR x STARTS WITH 'MSServerCluster/' OR x STARTS WITH 'MSClusterVirtualServer/' OR x STARTS WITH 'MSServerClusterMgmtAPI/') SET c.wellknownspn=true RETURN p UNION MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true})<-[:SQLAdmin]-(o) WHERE (((o:User OR o:Computer) AND o.enabled) OR o:Group) RETURN p"
         }
       ]
     },
@@ -866,7 +876,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS', 'DHCP ADMINISTRATORS', 'ORGANIZATION MANAGEMENT', 'EXCHANGE TRUSTED SUBSYSTEM', 'EXCHANGE WINDOWS PERMISSIONS'] WHERE x.name STARTS WITH toUpper(y + '@')) OR any(y IN ['S-1-5-32-562', 'S-1-5-32-573', 'S-1-5-32-555', 'S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true RETURN x"
+          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS', 'DHCP ADMINISTRATORS', 'ORGANIZATION MANAGEMENT', 'EXCHANGE TRUSTED SUBSYSTEM', 'EXCHANGE WINDOWS PERMISSIONS'] WHERE x.name STARTS WITH y + '@') OR any(y IN ['S-1-5-32-562', 'S-1-5-32-573', 'S-1-5-32-555', 'S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true RETURN x"
         }
       ]
     },
@@ -1480,6 +1490,266 @@
         {
           "final": true,
           "query": "MATCH p = (a:Credential)-[:AssignedTo]->(b:Computer {enabled: true}) WHERE a.password=toLower(left(replace(b.samaccountname, '$', ''), 14)) SET a.weak=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Acronis backup agents",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'acronisagent/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "DataDomain servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'boostfs/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Veeam agents",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'veeamagentwindows/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Veeam management servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'veeamenterprisemanagersvc/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Other Veeam systems",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE s =~ '^(?i)Veeam(AgentWindows|CatalogSvc|DeploySvc|DistributionSvc|EnterpriseManagerSvc|FilesysVssSvc|GuestHelperSvc|LogShipperSvc|MountSvc|NfsSvc|TapeSvc|TransportSvc)/.*?') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Replicated fileshares (DFSR)",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'dfsr-') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "FTP servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'ftp/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "NFS servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'nfs/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "iSCSI servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'iscsitarget/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Hadoop HDFS servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'hdfs/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "DNS servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'dns/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Global catalog servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'gc/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "LDAP servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'ldap/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Web servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'http/' OR tolower(s) STARTS WITH 'https/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Hyper-V virtualization servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'hyper-v replica service/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Exchange servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE s =~ '^(?i)exchange(ab|rfr|mdb)/.*?') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "IMAP servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'imap/' OR tolower(s) STARTS WITH 'imap4/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "POP3 servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'pop/' OR tolower(s) STARTS WITH 'pop3/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "SMTP servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'smtp/' OR tolower(s) STARTS WITH 'smtpsvc/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Apple devices",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'afpserver/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Centrify DirectAuthorize servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'directauthorize/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "SCCM-managed devices",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'cmrcservice/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Computers with VNC",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'vnc/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Computers with RDP",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'termsrv/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Computers with WinRM",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'wsman/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Uknown SPNs",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o {enabled: true}) WHERE (o:User OR o:Computer) AND NOT coalesce(o.wellknownspn, false) AND any(s IN o.serviceprincipalnames WHERE NOT s =~ '^(?i)(cifs|host|microsoft virtual console service|microsoft virtual system migration service|restrictedkrbhost|rpc|tapinego)/.*?') RETURN p"
         }
       ]
     },
