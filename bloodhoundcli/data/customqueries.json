@@ -801,6 +801,16 @@
       ]
     },
     {
+      "name": "Paths from owned domain to other domain via Password Reuse",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (d:Domain {owned: true})-[:Contains*1..]->(a:User)-[:AssignedTo]-(c:Credential)-[:HasCredential]-(b: User {enabled: true, tier: 0})<-[:Contains*1..]-(e:Domain) where d<>e RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Mark active computers (no output)",
       "category": "AD Post Processing",
       "queryList": [
