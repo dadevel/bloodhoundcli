@@ -796,7 +796,17 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (u1:User {enabled: true})-[:HasCredential]->(:Credential)-[:AssignedTo]->(u2:User {enabled: true}) WHERE u1.domain<>u2.domain RETURN p"
+          "query": "MATCH p = (u1:User)-[:HasCredential]->(:Credential)-[:AssignedTo]->(u2:User {enabled: true}) WHERE u1.domain<>u2.domain RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Paths from owned domains via password reuse",
+      "category": "Domains",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain {owned: true})-[:Contains*1..]->(:User)-[:HasCredential]->(:Credential)-[:AssignedTo]->(:User {enabled: true})<-[:Contains*1..]-(:Domain {owned: false}) RETURN p"
         }
       ]
     },
