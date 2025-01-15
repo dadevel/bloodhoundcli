@@ -801,12 +801,12 @@
       ]
     },
     {
-      "name": "Paths from owned domain to other domain via Password Reuse",
+      "name": "Cross-domain password reuse from owned domains",
       "category": "Domains",
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (d:Domain {owned: true})-[:Contains*1..]->(a:User)-[:AssignedTo]-(c:Credential)-[:HasCredential]-(b: User {enabled: true, tier: 0})<-[:Contains*1..]-(e:Domain) where d<>e RETURN p"
+          "query": "MATCH p = (:Domain {owned: true})-[:Contains*1..]->(:User)-[:HasCredential]->(:Credential)-[:AssignedTo]->(:User {enabled: true})<-[:Contains*1..]-(:Domain {owned: false}) RETURN p"
         }
       ]
     },
