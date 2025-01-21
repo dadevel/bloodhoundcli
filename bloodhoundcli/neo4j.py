@@ -102,11 +102,13 @@ class Database:
 
     def tag_objects(self) -> None:
         print('Tag Objects')
+
         # Get querys within customqueries.json
-        with open('~/.config/bloodhound/customqueries.json', 'r') as queries:
+        json_path = os.path.expanduser('~/.config/bloodhound/customqueries.json')
+        with open(json_path, 'r') as queries:
             data = json.load(queries)
         
-        # Executes every query that has "tag_object"=true in customqueries.json
+        # Executes every query that has "tag_object"=true
         for item in data["queries"]:
             if item["tag_object"]:
                 for q in item["querylist"]:
