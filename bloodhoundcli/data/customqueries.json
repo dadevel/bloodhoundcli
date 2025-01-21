@@ -2,7 +2,7 @@
   "queries": [
     {
       "name": "Best paths from owned (unlimited)",
-      "category": "Paths"
+      "category": "Paths",
 			"tag_object": false,
 			"querylist": [
         {
@@ -13,7 +13,7 @@
     },
     {
       "name": "Shortest paths from owned (5 hops)",
-      "category": "Paths"
+      "category": "Paths",
 			"tag_object": false,
 			"querylist": [
         {
@@ -24,7 +24,7 @@
     },
     {
       "name": "All paths from owned (5 hops)",
-      "category": "Paths"
+      "category": "Paths",
 			"tag_object": false,
 			"querylist": [
         {
@@ -35,7 +35,7 @@
     },
     {
       "name": "Best paths from owned to valuable targets (unlimited)",
-      "category": "Paths"
+      "category": "Paths",
 			"tag_object": false,
 			"querylist": [
         {
@@ -46,7 +46,7 @@
     },
     {
       "name": "Shortest paths from owned to valuable targets (5 hops)",
-      "category": "Paths"
+      "category": "Paths",
 			"tag_object": false,
 			"querylist": [
         {
@@ -57,7 +57,7 @@
     },
     {
       "name": "All paths from owned to valuable targets (5 hops)",
-      "category": "Paths"
+      "category": "Paths",
 			"tag_object": false,
 			"querylist": [
         {
@@ -68,7 +68,7 @@
     },
     {
       "name": "All valueable targets",
-      "category": "Paths"
+      "category": "Paths",
 			"tag_object": false,
 			"querylist": [
         {
@@ -79,7 +79,7 @@
     },
     {
       "name": "All owned objects",
-      "category": "Paths"
+      "category": "Paths",
 			"tag_object": false,
 			"querylist": [
         {
@@ -90,7 +90,7 @@
     },
     {
       "name": "Session escalation paths",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -101,7 +101,7 @@
     },
     {
       "name": "Session tiering violations",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -112,7 +112,7 @@
     },
     {
       "name": "Sessions of T0 users",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -123,7 +123,7 @@
     },
     {
       "name": "Sessions on T0 computers",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -134,7 +134,7 @@
     },
     {
       "name": "Sessions of valuable users",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -145,7 +145,7 @@
     },
     {
       "name": "Sessions on valuable computers",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -156,7 +156,7 @@
     },
     {
       "name": "Sessions on legacy computers",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -167,7 +167,7 @@
     },
     {
       "name": "Service accounts with sessions (5 hops)",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -178,7 +178,7 @@
     },
     {
       "name": "Members of protected users (5 hops)",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -189,7 +189,7 @@
     },
     {
       "name": "Potential admins by admincount attribute (3 hops)",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -200,7 +200,7 @@
     },
     {
       "name": "Potential admins by name (3 hops)",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -211,7 +211,7 @@
     },
     {
       "name": "Members of protected users (5 hops)",
-      "category": "Admin Hunt"
+      "category": "Admin Hunt",
 			"tag_object": false,
 			"querylist": [
         {
@@ -222,7 +222,7 @@
     },
     {
       "name": "Enabled certificate templates",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -233,7 +233,7 @@
     },
     {
       "name": "Paths from owned to ADCS (5 hops)",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -244,7 +244,7 @@
     },
     {
       "name": "ADCS tiering violations",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -255,7 +255,7 @@
     },
     {
       "name": "Direct paths to ESC1 templates excluding T0",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -266,7 +266,7 @@
     },
     {
       "name": "Direct paths to ESC2 templates excluding T0",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -277,7 +277,7 @@
     },
     {
       "name": "Direct paths to ESC3 templates excluding T0",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -288,7 +288,7 @@
     },
     {
       "name": "Direct paths to ESC4 templates excluding T0",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -299,7 +299,7 @@
     },
     {
       "name": "Certificate authorities with ESC6",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -310,7 +310,7 @@
     },
     {
       "name": "Direct paths to ESC7 certificate authorities",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -321,7 +321,7 @@
     },
     {
       "name": "Certificate authorities with ESC8",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -332,7 +332,7 @@
     },
     {
       "name": "Direct paths to ESC8 templates",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -343,7 +343,7 @@
     },
     {
       "name": "Direct paths to ESC9 templates",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -354,7 +354,7 @@
     },
     {
       "name": "Certificate authorities with ESC11",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -365,7 +365,7 @@
     },
     {
       "name": "Direct paths to ESC11 templates",
-      "category": "ADCS"
+      "category": "ADCS",
 			"tag_object": false,
 			"querylist": [
         {
@@ -376,7 +376,7 @@
     },
     {
       "name": "Paths from standard groups to valueable targets (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -387,7 +387,7 @@
     },
     {
       "name": "Paths from standard groups (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -398,7 +398,7 @@
     },
     {
       "name": "Paths from regular users to valueable targets (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -409,7 +409,7 @@
     },
     {
       "name": "Regular users with local admin rights (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -420,7 +420,7 @@
     },
     {
       "name": "Regular users with local execution rights (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -431,7 +431,7 @@
     },
     {
       "name": "Regular users with LAPS access (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -442,7 +442,7 @@
     },
     {
       "name": "Regular users with gMSA access (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -453,7 +453,7 @@
     },
     {
       "name": "Regular users with DCSync rights (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -464,7 +464,7 @@
     },
     {
       "name": "Regular users that can reset passwords (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -475,7 +475,7 @@
     },
     {
       "name": "Regular users that can add members to groups (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -486,7 +486,7 @@
     },
     {
       "name": "Regular users with paths to disabled users (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -497,7 +497,7 @@
     },
     {
       "name": "Regular users with paths to disabled computers (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -508,7 +508,7 @@
     },
     {
       "name": "Regular users owning objects",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -519,7 +519,7 @@
     },
     {
       "name": "Objects with potential password in description",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -530,7 +530,7 @@
     },
     {
       "name": "Potential pre-created computers",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -541,7 +541,7 @@
     },
     {
       "name": "DACL tiering violations",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -552,7 +552,7 @@
     },
     {
       "name": "Exchange permissions (3 hops)",
-      "category": "Escalation"
+      "category": "Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -563,7 +563,7 @@
     },
     {
       "name": "Computers in valueable groups (3 hops)",
-      "category": "NTLM Relaying"
+      "category": "NTLM Relaying",
 			"tag_object": false,
 			"querylist": [
         {
@@ -574,7 +574,7 @@
     },
     {
       "name": "Computers with local admin rights (5 hops)",
-      "category": "NTLM Relaying"
+      "category": "NTLM Relaying",
 			"tag_object": false,
 			"querylist": [
         {
@@ -585,7 +585,7 @@
     },
     {
       "name": "Computers without SMB signing",
-      "category": "NTLM Relaying"
+      "category": "NTLM Relaying",
 			"tag_object": false,
 			"querylist": [
         {
@@ -596,7 +596,7 @@
     },
     {
       "name": "Paths from computers excluding T0 (3 hops)",
-      "category": "NTLM Relaying"
+      "category": "NTLM Relaying",
 			"tag_object": false,
 			"querylist": [
         {
@@ -607,7 +607,7 @@
     },
     {
       "name": "Kerberoastable users",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -618,7 +618,7 @@
     },
     {
       "name": "AS-REP-roastable users",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -629,7 +629,7 @@
     },
     {
       "name": "Unconstrained delegations excluding T0",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -640,7 +640,7 @@
     },
     {
       "name": "Constrained delegations excluding T0",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -651,7 +651,7 @@
     },
     {
       "name": "Constrained delegations with protocol transition excluding T0",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -662,7 +662,7 @@
     },
     {
       "name": "Constrained delegations without protocol transition excluding T0",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -673,7 +673,7 @@
     },
     {
       "name": "Resource-based constrained delegations excluding T0",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -684,7 +684,7 @@
     },
     {
       "name": "T0 users that can be delegated",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -695,7 +695,7 @@
     },
     {
       "name": "Valueable users that can be delegated",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -706,7 +706,7 @@
     },
     {
       "name": "Linux servers potentially vulnerable to account name spoofing",
-      "category": "Kerberos"
+      "category": "Kerberos",
 			"tag_object": false,
 			"querylist": [
         {
@@ -717,7 +717,7 @@
     },
     {
       "name": "GPO tiering violations",
-      "category": "GPOs"
+      "category": "GPOs",
 			"tag_object": false,
 			"querylist": [
         {
@@ -728,7 +728,7 @@
     },
     {
       "name": "Direct paths to GPOs excluding T0",
-      "category": "GPOs"
+      "category": "GPOs",
 			"tag_object": false,
 			"querylist": [
         {
@@ -739,7 +739,7 @@
     },
     {
       "name": "OUs containing users (10 hops)",
-      "category": "GPOs"
+      "category": "GPOs",
 			"tag_object": false,
 			"querylist": [
         {
@@ -750,7 +750,7 @@
     },
     {
       "name": "OUs containing computers (10 hops)",
-      "category": "GPOs"
+      "category": "GPOs",
 			"tag_object": false,
 			"querylist": [
         {
@@ -761,7 +761,7 @@
     },
     {
       "name": "Domains and OUs (5 hops)",
-      "category": "GPOs"
+      "category": "GPOs",
 			"tag_object": false,
 			"querylist": [
         {
@@ -772,7 +772,7 @@
     },
     {
       "name": "GPOs and OUs",
-      "category": "GPOs"
+      "category": "GPOs",
 			"tag_object": false,
 			"querylist": [
         {
@@ -783,7 +783,7 @@
     },
     {
       "name": "MSSQL servers",
-      "category": "MSSQL"
+      "category": "MSSQL",
 			"tag_object": false,
 			"querylist": [
         {
@@ -794,7 +794,7 @@
     },
     {
       "name": "MSSQL admins",
-      "category": "MSSQL"
+      "category": "MSSQL",
 			"tag_object": false,
 			"querylist": [
         {
@@ -805,7 +805,7 @@
     },
     {
       "name": "Users that are member of a foreign group (10 hops)",
-      "category": "Domains"
+      "category": "Domains",
 			"tag_object": false,
 			"querylist": [
         {
@@ -816,7 +816,7 @@
     },
     {
       "name": "Users with same name in different domain",
-      "category": "Domains"
+      "category": "Domains",
 			"tag_object": false,
 			"querylist": [
         {
@@ -827,7 +827,7 @@
     },
     {
       "name": "Cross-domain object ownership",
-      "category": "Domains"
+      "category": "Domains",
 			"tag_object": false,
 			"querylist": [
         {
@@ -838,7 +838,7 @@
     },
     {
       "name": "Cross-domain ACLs",
-      "category": "Domains"
+      "category": "Domains",
 			"tag_object": false,
 			"querylist": [
         {
@@ -849,7 +849,7 @@
     },
     {
       "name": "Cross-domain paths",
-      "category": "Domains"
+      "category": "Domains",
 			"tag_object": false,
 			"querylist": [
         {
@@ -860,7 +860,7 @@
     },
     {
       "name": "Paths from objects in owned domains to other domains",
-      "category": "Domains"
+      "category": "Domains",
 			"tag_object": false,
 			"querylist": [
         {
@@ -871,7 +871,7 @@
     },
     {
       "name": "Cross-domain password reuse",
-      "category": "Domains"
+      "category": "Domains",
 			"tag_object": false,
 			"querylist": [
         {
@@ -882,7 +882,7 @@
     },
     {
       "name": "Paths from owned domains via password reuse",
-      "category": "Domains"
+      "category": "Domains",
 			"tag_object": false,
 			"querylist": [
         {
@@ -893,7 +893,7 @@
     },
     {
       "name": "Mark active computers (no output)",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -904,7 +904,7 @@
     },
     {
       "name": "Mark active users (no output)",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -915,7 +915,7 @@
     },
     {
       "name": "Connect objects with constrained delegation",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -926,7 +926,7 @@
     },
     {
       "name": "Connect service accounts to computers where they might be running",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -937,7 +937,7 @@
     },
     {
       "name": "Add reverse sessions (no output)",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -948,7 +948,7 @@
     },
     {
       "name": "Tag T0 objects",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -959,7 +959,7 @@
     },
     {
       "name": "Tag T0 groups",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -970,7 +970,7 @@
     },
     {
       "name": "Tag valueable groups",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -981,7 +981,7 @@
     },
     {
       "name": "Tag members of T0 groups (5 hops)",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -992,7 +992,7 @@
     },
     {
       "name": "Tag members of valueable groups (5 hops)",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1003,7 +1003,7 @@
     },
     {
       "name": "Tag OUs containing T0 objects",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1014,7 +1014,7 @@
     },
     {
       "name": "Tag MSOL accounts as T0",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1025,7 +1025,7 @@
     },
     {
       "name": "Mark objects with direct paths to T0 as valuable",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1036,7 +1036,7 @@
     },
     {
       "name": "Mark active computers without LAPS as valuable",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1047,7 +1047,7 @@
     },
     {
       "name": "Mark computers with sessions of valuable users",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1058,7 +1058,7 @@
     },
     {
       "name": "Mark protected users as senstive",
-      "category": "AD Post Processing"
+      "category": "AD Post Processing",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1069,7 +1069,7 @@
     },
     {
       "name": "Show T0",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1080,7 +1080,7 @@
     },
     {
       "name": "Generic tiering violations (5 hops)",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1091,7 +1091,7 @@
     },
     {
       "name": "Users and computers violating T0 (5 hops)",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1102,7 +1102,7 @@
     },
     {
       "name": "Potentially interesting users and computers",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1113,7 +1113,7 @@
     },
     {
       "name": "Tag T2 OUs",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1124,7 +1124,7 @@
     },
     {
       "name": "Tag T1 OUs",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1135,7 +1135,7 @@
     },
     {
       "name": "Tag T0 OUs",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": true,
 			"querylist": [
         {
@@ -1146,7 +1146,7 @@
     },
     {
       "name": "Untagged OUs containing Windows clients",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1158,7 +1158,7 @@
     },
     {
       "name": "Untagged OUs containing Windows servers",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1170,7 +1170,7 @@
     },
     {
       "name": "Untagged OUs containing users",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1182,7 +1182,7 @@
     },
     {
       "name": "Reset tiering tags",
-      "category": "AD Tiering"
+      "category": "AD Tiering",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1193,7 +1193,7 @@
     },
     {
       "name": "T0 users that never set a password",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1204,7 +1204,7 @@
     },
     {
       "name": "Enabled users that never set a password",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1215,7 +1215,7 @@
     },
     {
       "name": "T0 users without password change since a year",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1226,7 +1226,7 @@
     },
     {
       "name": "Enabled users without password change since a year",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1237,7 +1237,7 @@
     },
     {
       "name": "T0 users with password change after last logon",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1248,7 +1248,7 @@
     },
     {
       "name": "Enabled users with password change after last logon",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1259,7 +1259,7 @@
     },
     {
       "name": "T0 users with password not required",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1270,7 +1270,7 @@
     },
     {
       "name": "Enabled users with password not required",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1281,7 +1281,7 @@
     },
     {
       "name": "T0 users with never expiring passwords",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1292,7 +1292,7 @@
     },
     {
       "name": "Enabled users with never expiring passwords",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1303,7 +1303,7 @@
     },
     {
       "name": "Enabled members of dangerous groups (5 hops)",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1314,7 +1314,7 @@
     },
     {
       "name": "Direct members of pre-windows 2000 group",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1325,7 +1325,7 @@
     },
     {
       "name": "T0 users that are not protected (5 hops)",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1336,7 +1336,7 @@
     },
     {
       "name": "Active computers with legacy OS",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1347,7 +1347,7 @@
     },
     {
       "name": "Active computers with unsupported OS",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1358,7 +1358,7 @@
     },
     {
       "name": "Active computers without LAPS excluding DCs (10 hops)",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1369,7 +1369,7 @@
     },
     {
       "name": "Active computers without password change since 90 days",
-      "category": "Audit"
+      "category": "Audit",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1380,7 +1380,7 @@
     },
     {
       "name": "T0 users without logon",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1391,7 +1391,7 @@
     },
     {
       "name": "Enabled users without logon",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1402,7 +1402,7 @@
     },
     {
       "name": "T0 users without logon since 90 days",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1413,7 +1413,7 @@
     },
     {
       "name": "Enabled users without logon since 90 days",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1424,7 +1424,7 @@
     },
     {
       "name": "Disabled users",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1435,7 +1435,7 @@
     },
     {
       "name": "T0 computers without logon",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1446,7 +1446,7 @@
     },
     {
       "name": "Enabled computers without logon",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1457,7 +1457,7 @@
     },
     {
       "name": "T0 computers without logon since 90 days",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1468,7 +1468,7 @@
     },
     {
       "name": "Enabled computers without logon since 90 days",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1479,7 +1479,7 @@
     },
     {
       "name": "Disabled computers",
-      "category": "Stale Objects"
+      "category": "Stale Objects",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1490,7 +1490,7 @@
     },
     {
       "name": "Paths from cracked passwords excluding T0 to valueable targets (3 hops)",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1501,7 +1501,7 @@
     },
     {
       "name": "Kerberoasted users",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1512,7 +1512,7 @@
     },
     {
       "name": "T0 users with cracked password",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1523,7 +1523,7 @@
     },
     {
       "name": "Valuable users with cracked password",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1534,7 +1534,7 @@
     },
     {
       "name": "T0 users with shared password",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1545,7 +1545,7 @@
     },
     {
       "name": "Valueable users with shared password",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1556,7 +1556,7 @@
     },
     {
       "name": "Users with shared passwords excluding empty password",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1567,7 +1567,7 @@
     },
     {
       "name": "Users where password equals username or reverse username",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1578,7 +1578,7 @@
     },
     {
       "name": "Users where password contains username or reverse username",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1589,7 +1589,7 @@
     },
     {
       "name": "Users where password contains part of domain",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1600,7 +1600,7 @@
     },
     {
       "name": "Users with empty password",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1611,7 +1611,7 @@
     },
     {
       "name": "Users with passwords up to 4 chars",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1622,7 +1622,7 @@
     },
     {
       "name": "Users with passwords up to 8 chars",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1633,7 +1633,7 @@
     },
     {
       "name": "Users with password in description",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1644,7 +1644,7 @@
     },
     {
       "name": "Pre-created Computers",
-      "category": "Passwords"
+      "category": "Passwords",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1655,7 +1655,7 @@
     },
     {
       "name": "Acronis backup agents",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1666,7 +1666,7 @@
     },
     {
       "name": "DataDomain servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1677,7 +1677,7 @@
     },
     {
       "name": "Veeam agents",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1688,7 +1688,7 @@
     },
     {
       "name": "Veeam management servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1699,7 +1699,7 @@
     },
     {
       "name": "Other Veeam systems",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1710,7 +1710,7 @@
     },
     {
       "name": "Replicated fileshares (DFSR)",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1721,7 +1721,7 @@
     },
     {
       "name": "FTP servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1732,7 +1732,7 @@
     },
     {
       "name": "NFS servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1743,7 +1743,7 @@
     },
     {
       "name": "iSCSI servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1754,7 +1754,7 @@
     },
     {
       "name": "Hadoop HDFS servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1765,7 +1765,7 @@
     },
     {
       "name": "DNS servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1776,7 +1776,7 @@
     },
     {
       "name": "Global catalog servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1787,7 +1787,7 @@
     },
     {
       "name": "LDAP servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1798,7 +1798,7 @@
     },
     {
       "name": "Web servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1809,7 +1809,7 @@
     },
     {
       "name": "Hyper-V virtualization servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1820,7 +1820,7 @@
     },
     {
       "name": "Exchange servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1831,7 +1831,7 @@
     },
     {
       "name": "IMAP servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1842,7 +1842,7 @@
     },
     {
       "name": "POP3 servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1853,7 +1853,7 @@
     },
     {
       "name": "SMTP servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1864,7 +1864,7 @@
     },
     {
       "name": "Apple devices",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1875,7 +1875,7 @@
     },
     {
       "name": "Centrify DirectAuthorize servers",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1886,7 +1886,7 @@
     },
     {
       "name": "SCCM-managed devices",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1897,7 +1897,7 @@
     },
     {
       "name": "Computers with VNC",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1908,7 +1908,7 @@
     },
     {
       "name": "Computers with RDP",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1919,7 +1919,7 @@
     },
     {
       "name": "Computers with WinRM",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1930,7 +1930,7 @@
     },
     {
       "name": "Uknown SPNs",
-      "category": "SPN Discovery"
+      "category": "SPN Discovery",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1941,7 +1941,7 @@
     },
     {
       "name": "Fix object names",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1952,7 +1952,7 @@
     },
     {
       "name": "Mark T0 objects",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1963,7 +1963,7 @@
     },
     {
       "name": "Mark T0 roles",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1974,7 +1974,7 @@
     },
     {
       "name": "Mark valueable roles",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1985,7 +1985,7 @@
     },
     {
       "name": "Mark users with T0 roles (10 hops)",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -1996,7 +1996,7 @@
     },
     {
       "name": "Mark users with valueable roles (10 hops)",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2007,7 +2007,7 @@
     },
     {
       "name": "Mark owners of subscriptions as T0",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2018,7 +2018,7 @@
     },
     {
       "name": "Mark service principals with privileged MS Graph app role assignments",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2029,7 +2029,7 @@
     },
     {
       "name": "Mark apps that are running as T0 service principal",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2040,7 +2040,7 @@
     },
     {
       "name": "Mark apps that are running as valueable service principal",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2051,7 +2051,7 @@
     },
     {
       "name": "Mark owners of T0 applications",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2062,7 +2062,7 @@
     },
     {
       "name": "Mark owners of valueable applications",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2073,7 +2073,7 @@
     },
     {
       "name": "Mark owners of any application as valueable",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2084,7 +2084,7 @@
     },
     {
       "name": "Mark objects with direct control over the tenant as valueable (e.g. AZMGGrantAppRoles)",
-      "category": "Azure Post Processing"
+      "category": "Azure Post Processing",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2095,7 +2095,7 @@
     },
     {
       "name": "Show T0",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2106,7 +2106,7 @@
     },
     {
       "name": "Principals without Azure role but with RBAC role User Access Administrator (10 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2117,7 +2117,7 @@
     },
     {
       "name": "Paths into T0 (10 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2128,7 +2128,7 @@
     },
     {
       "name": "Paths to valueable targets (10 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2139,7 +2139,7 @@
     },
     {
       "name": "Paths to high value roles (10 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2150,7 +2150,7 @@
     },
     {
       "name": "Paths from applications to high value targets (10 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2161,7 +2161,7 @@
     },
     {
       "name": "Paths to VMs excluding T0 (3 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2172,7 +2172,7 @@
     },
     {
       "name": "Paths to key vaults excluding T0 (3 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2183,7 +2183,7 @@
     },
     {
       "name": "Paths to ressource groups excluding T0 (3 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2194,7 +2194,7 @@
     },
     {
       "name": "Paths to subscriptions excluding T0 (3 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2205,7 +2205,7 @@
     },
     {
       "name": "Owners of groups",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2216,7 +2216,7 @@
     },
     {
       "name": "Paths from principals without an Azure role but the RBAC role User Access Administrator to resources (10 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2227,7 +2227,7 @@
     },
     {
       "name": "Paths from guests to valueable objects (3 hops)",
-      "category": "Azure Escalation"
+      "category": "Azure Escalation",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2238,7 +2238,7 @@
     },
     {
       "name": "Service principals with MS Graph app role assignments",
-      "category": "Azure MS Graph"
+      "category": "Azure MS Graph",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2249,7 +2249,7 @@
     },
     {
       "name": "Direct controllers of MS Graph",
-      "category": "Azure MS Graph"
+      "category": "Azure MS Graph",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2260,7 +2260,7 @@
     },
     {
       "name": "Shortest path to MS Graph (10 hops)",
-      "category": "Azure MS Graph"
+      "category": "Azure MS Graph",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2271,7 +2271,7 @@
     },
     {
       "name": "Shortest path from users to service principals (10 hops)",
-      "category": "Azure Managed Identity"
+      "category": "Azure Managed Identity",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2282,7 +2282,7 @@
     },
     {
       "name": "Shortest path from users to managed identities (10 hops)",
-      "category": "Azure Managed Identity"
+      "category": "Azure Managed Identity",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2293,7 +2293,7 @@
     },
     {
       "name": "All service principals",
-      "category": "Azure Managed Identity"
+      "category": "Azure Managed Identity",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2304,7 +2304,7 @@
     },
     {
       "name": "All managed identities",
-      "category": "Azure Managed Identity"
+      "category": "Azure Managed Identity",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2315,7 +2315,7 @@
     },
     {
       "name": "Users in valueable roles synced from on-prem (10 hops)",
-      "category": "Azure Synchronization"
+      "category": "Azure Synchronization",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2327,7 +2327,7 @@
     },
     {
       "name": "Paths from users synced from on-prem to high value targets (10 hops)",
-      "category": "Azure Synchronization"
+      "category": "Azure Synchronization",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2338,7 +2338,7 @@
     },
     {
       "name": "Guests synced from on-prem",
-      "category": "Azure Synchronization"
+      "category": "Azure Synchronization",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2349,7 +2349,7 @@
     },
     {
       "name": "Users synced from on-prem",
-      "category": "Azure Synchronization"
+      "category": "Azure Synchronization",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2360,7 +2360,7 @@
     },
     {
       "name": "Groups synced from on-prem",
-      "category": "Azure Synchronization"
+      "category": "Azure Synchronization",
 			"tag_object": false,
 			"querylist": [
         {
@@ -2371,7 +2371,7 @@
     },
     {
       "name": "Users related to AAD Connect",
-      "category": "Azure Synchronization"
+      "category": "Azure Synchronization",
 			"tag_object": false,
 			"querylist": [
         {
