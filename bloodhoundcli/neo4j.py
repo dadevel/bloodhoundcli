@@ -73,6 +73,7 @@ class Database:
     def enrich(self) -> None:
         self.create_indices()
         self.assign_weights()
+        self.tag_objects()
         # TODO: add reverse edge for HasSession
 
     def assign_weights(self) -> None:
@@ -98,6 +99,18 @@ class Database:
         self.execute('CREATE INDEX ad_computer_samaccountname_index IF NOT EXISTS FOR (c:Computer) ON (c.samaccountname)')
         print('indexing credential object ids')
         self.execute('CREATE INDEX ad_credential_objectid_index IF NOT EXISTS FOR (c:Credential) ON (c.objectid)')
+
+    def tag_objects(self) -> None:
+        print('Tag Objects')
+        # Get querys within customqueries.json
+        with open('~/.config/bloodhound/customqueries.json', 'r') as queries:
+            data = json.load(queries)
+        
+        # Executes every query that has "tag_object"=true in customqueries.json
+        for item in data["queries"]:
+            if item["tag_object"]:
+                for q in item["querylist"]:
+                    self.execute(q["query"])
 
 
 @click.command(help='Execute Cypher statement')
