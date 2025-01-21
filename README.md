@@ -126,6 +126,7 @@ bloodhoundcli import-winevents ./logons.json
 ## Weighted Graph
 
 Assign weights to edges in BloodHound (based on work by [@riccardoancarani](https://riccardoancarani.github.io/2019-11-08-not-all-paths-are-equal/) and [@jmbesnard](https://www.linkedin.com/pulse/graph-theory-assess-active-directory-smartest-vs-shortest-besnard-0qgle)).
+Executes queries to set the attributes 'tier', 'highvalue' and 'sensitive'. Those attributes are necessary for some queries.
 
 ~~~ bash
 bloodhoundcli enrich
