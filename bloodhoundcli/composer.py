@@ -7,12 +7,12 @@ from pathlib import Path
 
 import click
 
-from bloodhoundcli import data  # type: ignore
+from bloodhoundcli import data as resources  # type: ignore
 from bloodhoundcli import bhce
 
 PROJECT_NAME_PREFIX = 'bloodhound-'
 PROJECT_NAME_PATTERN = re.compile(r'^bloodhound-(.*?)_neo4j-data$')
-COMPOSE_RESOURCE = importlib.resources.path(data, 'docker-compose.yml')
+COMPOSE_RESOURCE = importlib.resources.path(resources, 'docker-compose.yml')
 
 
 @click.command(help='List projects')
@@ -66,7 +66,7 @@ def destroy_project(name: str) -> None:
 
 def install_custom_queries_bh_legacy() -> None:
     dest_path = Path.home()/'.config/bloodhound/customqueries.json'
-    with importlib.resources.path(data, 'customqueries.json') as src_path:
+    with importlib.resources.path(resources, 'customqueries.json') as src_path:
         if dest_path.resolve() == src_path:
             # queries already installed
             return

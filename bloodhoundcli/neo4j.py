@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Generator
+import importlib.resources
 import json
 import os
 import re
@@ -8,6 +9,8 @@ import sys
 from requests.auth import HTTPBasicAuth
 import click
 import requests
+
+from bloodhoundcli import data as resources  # type: ignore
 
 NEO4J_URL = os.environ.get('NEO4J_URL') or 'http://localhost:7474'
 NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
@@ -73,7 +76,7 @@ class Database:
     def enrich(self) -> None:
         self.create_indices()
         self.assign_weights()
-        # TODO: add reverse edge for HasSession
+        self.run_post_processing_queries()
 
     def assign_weights(self) -> None:
         for edge_type in self.execute('MATCH ()-[r]->() RETURN DISTINCT type(r)'):
@@ -98,6 +101,20 @@ class Database:
         self.execute('CREATE INDEX ad_computer_samaccountname_index IF NOT EXISTS FOR (c:Computer) ON (c.samaccountname)')
         print('indexing credential object ids')
         self.execute('CREATE INDEX ad_credential_objectid_index IF NOT EXISTS FOR (c:Credential) ON (c.objectid)')
+
+    def run_post_processing_queries(self) -> None:
+        print('running post-processing queries')
+
+        # load queries from customqueries.json
+        with importlib.resources.path(resources, 'customqueries.json') as path:
+            with open(path, 'r') as file:
+                data = json.load(file)
+
+        # execute all enrichment queries
+        for item in data['queries']:
+            if item.get('enrich'):
+                for item in item['queryList']:
+                    self.execute(item['query'])
 
 
 @click.command(help='Execute Cypher statement')

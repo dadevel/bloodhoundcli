@@ -813,6 +813,7 @@
     {
       "name": "Mark active computers (no output)",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -823,6 +824,7 @@
     {
       "name": "Mark active users (no output)",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -833,6 +835,7 @@
     {
       "name": "Connect objects with constrained delegation",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -843,6 +846,7 @@
     {
       "name": "Connect service accounts to computers where they might be running",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -853,6 +857,7 @@
     {
       "name": "Add reverse sessions (no output)",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -863,6 +868,7 @@
     {
       "name": "Tag T0 objects",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -873,6 +879,7 @@
     {
       "name": "Tag T0 groups",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -883,6 +890,7 @@
     {
       "name": "Tag valueable groups",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -893,6 +901,7 @@
     {
       "name": "Tag members of T0 groups (5 hops)",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -903,6 +912,7 @@
     {
       "name": "Tag members of valueable groups (5 hops)",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -913,6 +923,7 @@
     {
       "name": "Tag OUs containing T0 objects",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -923,6 +934,7 @@
     {
       "name": "Tag MSOL accounts as T0",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -933,6 +945,7 @@
     {
       "name": "Mark objects with direct paths to T0 as valuable",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -953,6 +966,7 @@
     {
       "name": "Mark computers with sessions of valuable users",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -963,6 +977,7 @@
     {
       "name": "Mark protected users as senstive",
       "category": "AD Post Processing",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -1013,6 +1028,7 @@
     {
       "name": "Tag T2 OUs",
       "category": "AD Tiering",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -1023,6 +1039,7 @@
     {
       "name": "Tag T1 OUs",
       "category": "AD Tiering",
+      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -1033,6 +1050,7 @@
     {
       "name": "Tag T0 OUs",
       "category": "AD Tiering",
+      "enrich": true,
       "queryList": [
         {
           "final": true,

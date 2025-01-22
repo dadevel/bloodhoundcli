@@ -8,7 +8,7 @@ from requests import Session
 import requests
 import click
 
-from bloodhoundcli import data  # type: ignore
+from bloodhoundcli import data as resources  # type: ignore
 
 BLOODHOUND_URL = os.environ.get('BLOODHOUND_URL') or 'http://localhost:7575'
 BLOODHOUND_USERNAME = os.environ.get('BLOODHOUND_USERNAME') or 'admin@bloodhound'
@@ -36,7 +36,7 @@ def login() -> Session:
 
 
 def import_custom_queries(session: Session) -> None:
-    with importlib.resources.open_text(data, 'customqueries.json') as file:
+    with importlib.resources.open_text(resources, 'customqueries.json') as file:
         queries = json.load(file)
 
     expected_queries = {}

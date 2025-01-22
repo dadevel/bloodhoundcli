@@ -83,6 +83,31 @@ bloodhoundcli query -s -j 'MATCH (u:User {name: $stdin.name}) SET u.foo=$stdin.v
 EOF
 ~~~
 
+## Enrichment
+
+Execute a set of post-processing queries to mark certain objects with additional attributes and add additional edges for certain situations.
+
+~~~ bash
+bloodhoundcli enrich
+~~~
+
+These attributes are:
+
+- `tier=0` for a standard set of tier 0 objects
+- `highvalue=true` for objects with potential path to tier 0
+- `active=true` for accounts with login in last 90 days
+- `sensitive=true` for members of *Protected Users*
+
+### Weighted Graph
+
+The enrichment also assigns weights to edges in BloodHound (based on work by [@riccardoancarani](https://riccardoancarani.github.io/2019-11-08-not-all-paths-are-equal/) and [@jmbesnard](https://www.linkedin.com/pulse/graph-theory-assess-active-directory-smartest-vs-shortest-besnard-0qgle)).
+
+This allows to search for the easiest instead of the shortest path to Domain Admin.
+
+~~~ cypher
+MATCH (a {owned: true}) MATCH (b {highvalue: true}) CALL apoc.algo.dijkstra(a, b, '>', 'cost') YIELD path RETURN path;
+~~~
+
 ## NTDS Import
 
 Run a DCSync from [impacket-secretsdump](https://github.com/fortra/impacket) with multiple wordlists and rulesets trough [Hashcat](https://github.com/hashcat/hashcat).
@@ -102,8 +127,8 @@ bloodhoundcli import-ntds -p ./hashcat.potfile ./*.ntds
 ~~~
 
 > **Note:**
-> `bloodhoundcli` assumes that the name of the NTDS file minus the `.ntds` suffix is the FQDN of the domain.
-> This means a DCSync from `dc01.subdomain.corp.local` should be named `subdomain.corp.local.ntds`.
+> BloodHoundCli assumes that the name of the NTDS file minus the `.ntds` suffix is the FQDN of the domain.
+> This means a DCSync from `dc01.subdomain.corp.local` must be named `subdomain.corp.local.ntds`.
 
 ## NetExec Integration
 
@@ -123,16 +148,3 @@ First export recent logons from Windows Event Logs with [Get-RecentLogons.ps1](.
 bloodhoundcli import-winevents ./logons.json
 ~~~
 
-## Weighted Graph
-
-Assign weights to edges in BloodHound (based on work by [@riccardoancarani](https://riccardoancarani.github.io/2019-11-08-not-all-paths-are-equal/) and [@jmbesnard](https://www.linkedin.com/pulse/graph-theory-assess-active-directory-smartest-vs-shortest-besnard-0qgle)).
-
-~~~ bash
-bloodhoundcli enrich
-~~~
-
-Now you can use queries like the following to find the easiest instead of the shortest path to Domain Admin.
-
-~~~ cypher
-MATCH (a {owned: true}) MATCH (b {highvalue: true}) CALL apoc.algo.dijkstra(a, b, '>', 'cost') YIELD path RETURN path;
-~~~
