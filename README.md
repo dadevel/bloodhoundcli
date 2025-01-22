@@ -148,3 +148,14 @@ First export recent logons from Windows Event Logs with [Get-RecentLogons.ps1](.
 bloodhoundcli import-winevents ./logons.json
 ~~~
 
+## ServiceDetector Integration
+
+Import SMB Signing, WebClient and EFS info from [ServiceDetector](https://github.com/dadevel/servicedetector).
+
+~~~ bash
+bloodhoundcli query 'MATCH (c:Computer {active: true}) RETURN c.name' > ./computers.txt
+servicedetector -c coercion -d corp.local -u jdoe -p 'passw0rd' $(< ./computers.txt) | tee -a ./servicedetector.json
+jq -r 'select(.category=="coercion" and .product=="WebClient" and .state=="running")|.host' ./servicedetector.json | bloodhoundcli query -s 'MATCH (c:Computer {name: $stdin}) SET c.webclient=true RETURN c.name'
+jq -r 'select(.category=="coercion" and .product=="EFS" and .state=="running")|.host' ./servicedetector.json | bloodhoundcli query -s 'MATCH (c:Computer {name: $stdin}) SET c.efs=true RETURN c.name'
+jq -r 'select(.category=="smb" and .signing==false)|.host' ./servicedetector.json | bloodhoundcli query -s 'MATCH (c:Computer {name: $stdin}) SET c.smbsigning=false RETURN c.name'
+~~~
