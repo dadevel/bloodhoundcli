@@ -81,6 +81,16 @@
       ]
     },
     {
+      "name": "OU Hierarchy of Admins",
+      "category": "Admin Hunt",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {tier: 0}) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Session escalation paths",
       "category": "Admin Hunt",
       "queryList": [
@@ -527,6 +537,26 @@
         {
           "final": true,
           "query": "MATCH p = (:Computer {enabled: true})-[:AdminTo]->(:Computer {enabled: true}) RETURN p UNION MATCH p = (:Computer {enabled: true})-[:MemberOf*1..5]->(:Group)-[:AdminTo]->(:Computer {enabled: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Computers with WebClient",
+      "category": "NTLM Relaying",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:Computer {enabled: true, webclient: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Computers with EFS",
+      "category": "NTLM Relaying",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(:Computer {enabled: true, efs: true}) RETURN p"
         }
       ]
     },
@@ -1728,6 +1758,16 @@
         {
           "final": true,
           "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'directauthorize/') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Microsoft Dynamics servers",
+      "category": "SPN Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE tolower(s) STARTS WITH 'dynamicsnav/') SET c.wellknownspn=true RETURN p"
         }
       ]
     },
