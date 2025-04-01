@@ -130,6 +130,15 @@ bloodhoundcli import-ntds -p ./hashcat.potfile ./*.ntds
 > BloodHoundCli assumes that the name of the NTDS file minus the `.ntds` suffix is the FQDN of the domain.
 > This means a DCSync from `dc01.subdomain.corp.local` must be named `subdomain.corp.local.ntds`.
 
+## ADIDNS Import
+
+Import [adidnsdump](https://github.com/dirkjanm/adidnsdump) into BloodHound to add an `ipaddress` attribute to computers.
+For hosts that appear in ADIDNS but don't exist in BloodHound, standalone computer objects are created.
+
+~~~ bash
+bloodhoundcli import-adidns corp.local ./records.csv
+~~~
+
 ## NetExec Integration
 
 Import nodes for standalone computers and local users by leveraging the SQLite database of [NetExec](https://github.com/pennyw0rth/netexec).
