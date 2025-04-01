@@ -1,6 +1,6 @@
 import click
 
-from bloodhoundcli import bhce, composer, neo4j, hashcat, netexec, ntds, pwstats, winevent
+from bloodhoundcli import bhce, composer, neo4j, hashcat, netexec, ntds, pwstats, winevent, adidns
 
 
 @click.group()
@@ -22,6 +22,7 @@ main.add_command(netexec.import_netexec)
 main.add_command(ntds.import_ntds)
 main.add_command(pwstats.pwstats)
 main.add_command(winevent.import_winevents)
+main.add_command(adidns.import_adidns)
 
 
 if __name__ == '__main__':
