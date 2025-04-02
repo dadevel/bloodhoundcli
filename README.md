@@ -131,7 +131,10 @@ bloodhoundcli import-ntds -p ./hashcat.potfile ./*.ntds
 > This means a DCSync from `dc01.subdomain.corp.local` must be named `subdomain.corp.local.ntds`.
 
 ## ADIDNS Import
-Import [adidnsdump](https://github.com/dirkjanm/adidnsdump) into bloodhound to set the attribute `ip`. If a host appears in ADIDNS but does not exist in BloodHound, a new computer object is created.
+
+Import [adidnsdump](https://github.com/dirkjanm/adidnsdump) into BloodHound to add an `ipaddress` attribute to computers.
+For hosts that appear in ADIDNS but don't exist in BloodHound, standalone computer objects are created.
+
 ~~~ bash
 bloodhoundcli import-adidns ./records.csv
 ~~~
