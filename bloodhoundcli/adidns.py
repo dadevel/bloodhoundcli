@@ -1,61 +1,47 @@
-from pathlib import Path
-from typing import TextIO, TypedDict
+from typing import TypedDict, TextIO
+import csv
 
 import click
 
 from bloodhoundcli.neo4j import Database
 
 
-@click.command(help='Import Adidns output to create and update existing nodes')
-@click.argument('adidns', type=click.Path(exists=True, file_okay=True, dir_okay=False, path_type=Path), nargs=-1)
-
-
-def import_adidns(adidns: list[Path]) -> None:
+@click.command(help='Import computers from ADIDNS CSV')
+@click.argument('domain',)
+@click.argument('file', type=click.File('r'))
+def import_adidns(domain: str, file: TextIO) -> None:
     neo4j = Database.from_env()
     neo4j.create_indices()
 
-    output = []
+    # generate list of DNSEntry objects (only A records are used)
+    output = [
+        DNSEntry(record_type=row[0], zone=domain, hostname=row[1], ip=row[2])
+        for row in csv.reader(file)
+        if row[0] == 'A'
+    ]
 
-    # Generate list of DNSEntry objects (only A records are used)
-    for path in adidns:
-        try:
-            with open(path, 'r') as file:
-                lines = [line.rstrip() for line in file]
-                records = [x.split(',') for x in lines]
-                for entry in records:
-                    if entry[0] == 'A':
-                        output.append(DNSEntry(record_type=entry[0], hostname=entry[1], ip=entry[2]))
-
-        except Exception as e:
-            adinds = {}
-            print(f'error: failed to load file: {e}')
-
-
-    # Used to count updated and created nodes
+    # count updated and created nodes
     new_nodes = 0
     existing_nodes = 0
-    # Update database
     for entry in output:
-        # Check if node with hostname already exists
-        count=sum(neo4j.execute("MATCH (c:Computer) where substring(toLower(c.samaccountname), 0, size(c.samaccountname) - 1)=toLower($hostname) return 1", hostname=entry['hostname']))
-
-        if count == 1:
-            # If host already exists then the attribute IP is updated
-            neo4j.execute("MATCH (c:Computer) where substring(toLower(c.samaccountname), 0, size(c.samaccountname) - 1)=toLower($hostname) SET c.ip=$ip return 1", hostname=entry['hostname'], ip=entry['ip'])
+        fqdn = f'{entry['hostname']}.{entry['zone']}'.upper()
+        # check if node with hostname already exists
+        exists = sum(neo4j.execute('MATCH (c:Computer {name: $name}) RETURN 1', name=fqdn))
+        if exists:
+            # update attribute if computer already exists
+            neo4j.execute('MATCH (c:Computer {name: $name}) SET c.ipaddress=$ip RETURN 1', name=fqdn, ip=entry['ip'])
             existing_nodes += 1
         else:
-            # If no host with corresponding samaccountname exists a new node is created
-            neo4j.execute("CREATE (c:Computer {samaccountname: $hostname, ip: $ip, name: $hostname, objectid: $hostname})", hostname=str(entry['hostname']) + '$', ip=entry['ip'])
+            # otherwise create new computer
+            neo4j.execute('CREATE (c:Base:Computer {objectid: $name, name: $name, samaccountname: $hostname + "$", standalone: true, ipaddress: $ip})', name=fqdn, hostname=entry['hostname'], ip=entry['ip'])
             new_nodes += 1
-
 
     print(f'{existing_nodes} computer objects updated')
     print(f'{new_nodes} computer objects created')
 
 
-
 class DNSEntry(TypedDict):
     record_type: str
+    zone: str
     hostname: str
     ip: str
-
