@@ -136,7 +136,7 @@ Import [adidnsdump](https://github.com/dirkjanm/adidnsdump) into BloodHound to a
 For hosts that appear in ADIDNS but don't exist in BloodHound, standalone computer objects are created.
 
 ~~~ bash
-bloodhoundcli import-adidns ./records.csv
+bloodhoundcli import-adidns corp.local ./records.csv
 ~~~
 
 ## NetExec Integration
