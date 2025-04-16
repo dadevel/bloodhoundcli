@@ -851,24 +851,34 @@
       ]
     },
     {
-      "name": "Mark active computers (no output)",
+      "name": "Mark active and inactive computers (no output)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (c:Computer {enabled: true}) WHERE (c.lastlogon > 0 AND datetime().epochseconds - c.lastlogon < 60*60*24*90) OR (c.lastlogontimestamp > 0 AND datetime().epochseconds - c.lastlogontimestamp < 60*60*24*90) SET c.active=true"
+          "query": "MATCH (c:Computer) SET c.active = CASE WHEN c.enabled = true AND ((c.lastlogon > 0 AND datetime().epochseconds - c.lastlogon < 60*60*24*90) OR (c.lastlogontimestamp > 0 AND datetime().epochseconds - c.lastlogontimestamp < 60*60*24*90)) THEN true ELSE false END"
         }
       ]
     },
     {
-      "name": "Mark active users (no output)",
+      "name": "Mark active and inactive users (no output)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User {enabled: true}) WHERE (u.lastlogon > 0 AND datetime().epochseconds - u.lastlogon < 60*60*24*90) OR (u.lastlogontimestamp > 0 AND datetime().epochseconds - u.lastlogontimestamp < 60*60*24*90) SET u.active=true"
+          "query": "MATCH (u:User) SET u.active = CASE WHEN u.enabled = true AND ((u.lastlogon > 0 AND datetime().epochseconds - u.lastlogon < 60*60*24*90) OR (u.lastlogontimestamp > 0 AND datetime().epochseconds - u.lastlogontimestamp < 60*60*24*90)) THEN true ELSE false END"
+        }
+      ]
+    },
+    {
+      "name": "Reset activity tags",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a) SET a.active=null"
         }
       ]
     },
