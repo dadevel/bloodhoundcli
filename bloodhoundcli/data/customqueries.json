@@ -851,24 +851,33 @@
       ]
     },
     {
-      "name": "Mark active computers (no output)",
+      "name": "Mark active and inactive accounts (no output)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (c:Computer {enabled: true}) WHERE (c.lastlogon > 0 AND datetime().epochseconds - c.lastlogon < 60*60*24*90) OR (c.lastlogontimestamp > 0 AND datetime().epochseconds - c.lastlogontimestamp < 60*60*24*90) SET c.active=true"
+          "query": "MATCH (a) WHERE a:User OR a:Computer SET a.active=CASE WHEN a.enabled=true AND ((a.lastlogon > 0 AND datetime().epochseconds - a.lastlogon < 60*60*24*90) OR (a.lastlogontimestamp > 0 AND datetime().epochseconds - a.lastlogontimestamp < 60*60*24*90)) THEN true ELSE false END"
         }
       ]
     },
     {
-      "name": "Mark active users (no output)",
+      "name": "Reset tiering tags (no output)",
       "category": "AD Post Processing",
-      "enrich": true,
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User {enabled: true}) WHERE (u.lastlogon > 0 AND datetime().epochseconds - u.lastlogon < 60*60*24*90) OR (u.lastlogontimestamp > 0 AND datetime().epochseconds - u.lastlogontimestamp < 60*60*24*90) SET u.active=true"
+          "query": "MATCH (a) SET a.tier=null, a.highvalue=null"
+        }
+      ]
+    },
+    {
+      "name": "Reset activity tags (no output)",
+      "category": "AD Post Processing",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a) SET a.active=null"
         }
       ]
     },
@@ -1125,16 +1134,6 @@
           "final": true,
           "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(:User {enabled: true}) WHERE o.tier IS NULL RETURN p"
 
-        }
-      ]
-    },
-    {
-      "name": "Reset tiering tags",
-      "category": "AD Tiering",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH (a) SET a.tier=null, a.highvalue=null"
         }
       ]
     },
