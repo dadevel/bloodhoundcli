@@ -1,3 +1,7 @@
+# reenable md4
+import ctypes
+ctypes.CDLL('libssl.so').OSSL_PROVIDER_load(None, b'legacy')
+ctypes.CDLL('libssl.so').OSSL_PROVIDER_load(None, b'default')
 import hashlib
 
 
