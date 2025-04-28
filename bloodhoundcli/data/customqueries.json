@@ -1068,7 +1068,6 @@
     {
       "name": "Tag T2 OUs",
       "category": "AD Tiering",
-      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -1079,7 +1078,6 @@
     {
       "name": "Tag T1 OUs",
       "category": "AD Tiering",
-      "enrich": true,
       "queryList": [
         {
           "final": true,
@@ -1090,7 +1088,6 @@
     {
       "name": "Tag T0 OUs",
       "category": "AD Tiering",
-      "enrich": true,
       "queryList": [
         {
           "final": true,
