@@ -56,7 +56,11 @@ def import_users(nxcdb: sqlite3.Connection, neo4j: Database) -> None:
             upn = f'{username}@{userdomain}'
         else:
             # It's a local user. Hence, we have to find its host based on the hostname in the column `users.domain`.
-            hostname, hostdomain = nxcdb.execute('SELECT h.hostname, h.domain FROM users AS u JOIN hosts AS h ON lower(u.domain) = lower(h.hostname) WHERE u.id = ?', (int(userid),)).fetchone()
+            result = nxcdb.execute('SELECT h.hostname, h.domain FROM users AS u JOIN hosts AS h ON lower(u.domain) = lower(h.hostname) WHERE u.id = ?', (int(userid),)).fetchone()
+            if not result:
+                print(f'warning: database inconsistency detected, user with id {userid} has no corresponding host, please fix manually and re-run')
+                return
+            hostname, hostdomain = result
             is_domain_computer = '.' in hostdomain
             if is_domain_computer:
                 fqdn = f'{hostname}.{hostdomain}'
