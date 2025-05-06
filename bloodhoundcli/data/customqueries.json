@@ -932,7 +932,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN [512, 516, 517, 518, 519, 526, 527] WHERE x.objectid ENDS WITH '-' + toString(y)) OR any(y IN ['S-1-5-32-544', 'S-1-5-32-548', 'S-1-5-32-549', 'S-1-5-32-550', 'S-1-5-32-551', 'S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) SET x.tier=0, x.highvalue=true RETURN x"
+          "query": "MATCH (x:Group) WHERE any(y IN [512,516,517,518,519,526,527] WHERE x.objectid ENDS WITH '-' + toString(y)) OR any(y IN ['S-1-5-32-544','S-1-5-32-548','S-1-5-32-549','S-1-5-32-550','S-1-5-32-551','S-1-5-9'] WHERE x.objectid ENDS WITH '-' + y) SET x.tier=0, x.highvalue=true, x.highvalueTags=apoc.coll.toSet(coalesce(x.highvalueTags,[])+['t0Group']) RETURN x"
         }
       ]
     },
@@ -943,7 +943,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS', 'DHCP ADMINISTRATORS', 'ORGANIZATION MANAGEMENT', 'EXCHANGE TRUSTED SUBSYSTEM', 'EXCHANGE WINDOWS PERMISSIONS'] WHERE x.name STARTS WITH y + '@') OR any(y IN ['S-1-5-32-562', 'S-1-5-32-573', 'S-1-5-32-555', 'S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true RETURN x"
+          "query": "MATCH (x:Group) WHERE any(y IN ['DNSADMINS','DHCP ADMINISTRATORS','ORGANIZATION MANAGEMENT','EXCHANGE TRUSTED SUBSYSTEM','EXCHANGE WINDOWS PERMISSIONS'] WHERE x.name STARTS WITH y + '@') OR any(y IN ['S-1-5-32-562','S-1-5-32-573','S-1-5-32-555','S-1-5-32-580'] WHERE x.objectid ENDS WITH '-' + y) SET x.highvalue=true, x.highvalueTags=apoc.coll.toSet(coalesce(x.highvalueTags,[])+['hvtGroup']) RETURN x"
         }
       ]
     },
@@ -954,7 +954,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {tier: 0}) WHERE (x:Group OR x:User OR x:Computer) SET x.tier=0, x.highvalue=true RETURN p"
+          "query": "MATCH p=(x)-[:MemberOf*1..5]->(y:Group {tier:0}) WHERE x:Group OR x:User OR x:Computer SET x.tier=0, x.highvalue=true, x.highvalueTags=apoc.coll.toSet(coalesce(x.highvalueTags,[])+['memberT0Group']) RETURN p"
         }
       ]
     },
@@ -965,7 +965,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {highvalue: true}) WHERE (x:Group OR x:User OR x:Computer) SET x.highvalue=true RETURN p"
+          "query": "MATCH p=(x)-[:MemberOf*1..5]->(y:Group {highvalue:true}) WHERE x:Group OR x:User OR x:Computer SET x.highvalue=true, x.highvalueTags=apoc.coll.toSet(coalesce(x.highvalueTags,[])+['memberHvt']) RETURN p"
         }
       ]
     },
@@ -976,7 +976,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x:OU)-[:Contains*1..]->(y {tier: 0}) WHERE (y:OU OR y:Group OR y:User OR y:Computer) SET x.tier=0, x.highvalue=true RETURN p"
+          "query": "MATCH p=(x:OU)-[:Contains*1..]->(y) WHERE (y:OU OR y:Group OR y:User OR y:Computer) AND y.tier=0 SET x.tier=0, x.highvalue=true, x.highvalueTags=apoc.coll.toSet(coalesce(x.highvalueTags,[])+['ouT0']) RETURN p"
         }
       ]
     },
@@ -987,7 +987,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (u:User) WHERE u.name STARTS WITH 'MSOL_' SET u.tier=0, u.highvalue=true RETURN u"
+          "query": "MATCH (u:User) WHERE u.name STARTS WITH 'MSOL_' SET u.tier=0, u.highvalue=true, u.highvalueTags=apoc.coll.toSet(coalesce(u.highvalueTags,[])+['msol']) RETURN u"
         }
       ]
     },
@@ -998,7 +998,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (a)-[]->(b {tier: 0}) WHERE coalesce(a.tier, 2)<>0 SET a.highvalue=true RETURN p"
+          "query": "MATCH p=(a)-[]->(b {tier:0}) WHERE coalesce(a.tier,2)<>0 SET a.highvalue=true, a.highvalueTags=apoc.coll.toSet(coalesce(a.highvalueTags,[])+['t0Path']) RETURN p"
         }
       ]
     },
@@ -1008,7 +1008,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (c:Computer)-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS x MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {active: true, haslaps: false}) WHERE tolower(c.operatingsystem) CONTAINS 'windows' AND NOT c IN x AND NOT any(spn IN c.serviceprincipalnames WHERE tolower(spn) STARTS WITH 'msclustervirtualserver/') SET c.highvalue=true RETURN p"
+          "query": "MATCH (c:Computer)-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-516' WITH COLLECT(c) AS protected MATCH p=(:Domain)-[:Contains*1..]->(c:Computer {active:true,haslaps:false}) WHERE toLower(c.operatingsystem) CONTAINS 'windows' AND NOT c IN protected AND NOT any(spn IN c.serviceprincipalnames WHERE toLower(spn) STARTS WITH 'msclustervirtualserver/') SET c.highvalue=true, c.highvalueTags=apoc.coll.toSet(coalesce(c.highvalueTags,[])+['noLaps']) RETURN p"
         }
       ]
     },
@@ -1019,7 +1019,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x:Computer)-[:HasSession]->(y:User) WHERE (y.tier=0 OR y.highvalue) SET x.highvalue=true RETURN p"
+          "query": "MATCH p=(x:Computer)-[:HasSession]->(y:User) WHERE y.tier=0 OR y.highvalue SET x.highvalue=true, x.highvalueTags=apoc.coll.toSet(coalesce(x.highvalueTags,[])+['session']) RETURN p"
         }
       ]
     },
@@ -1111,7 +1111,6 @@
         {
           "final": true,
           "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS' AND NOT toUpper(c.operatingsystem) CONTAINS 'SERVER' RETURN p"
-
         }
       ]
     },
@@ -1122,7 +1121,6 @@
         {
           "final": true,
           "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS SERVER' RETURN p"
-
         }
       ]
     },
@@ -1133,7 +1131,6 @@
         {
           "final": true,
           "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(:User {enabled: true}) WHERE o.tier IS NULL RETURN p"
-
         }
       ]
     },
@@ -2174,7 +2171,6 @@
         {
           "final": true,
           "query": "MATCH p = (u:AZUser {enabled: true, onpremsyncenabled: true})-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole {highvalue: true}) RETURN p"
-
         }
       ]
     },
