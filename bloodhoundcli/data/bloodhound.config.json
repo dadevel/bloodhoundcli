@@ -4,19 +4,28 @@
   "metrics_port": ":2112",
   "root_url": "http://127.0.0.1:8080/",
   "work_dir": "/opt/bloodhound/work",
+  "collectors_base_path": "/etc/bloodhound/collectors",
   "log_level": "WARN",
   "log_path": "bloodhound.log",
   "tls": {
     "cert_file": "",
     "key_file": ""
   },
-  "collectors_base_path": "/etc/bloodhound/collectors",
+  "graph_driver": "neo4j",
+  "database": {
+    "connection": "host=postgres user=postgres password= dbname=postgres"
+  },
+  "neo4j": {
+    "connection": "neo4j://neo4j:@neo4j:7687/"
+  },
   "default_admin": {
     "principal_name": "admin",
-    "email_address": "admin@bloodhound",
     "password": "",
-    "first_name": "BloodHound",
-    "last_name": "Administrator",
     "expire_now": false
-  }
+  },
+  "enable_cypher_mutations": true,
+  "disable_cypher_complexity_limit": true,
+  "graph_query_memory_limit": 4,
+  "enable_text_logger": true,
+  "recreatedefaultadmin": false
 }

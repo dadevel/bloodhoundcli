@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: docker.io/library/postgres:13.2
+    image: docker.io/library/postgres:16
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ''
@@ -41,14 +41,7 @@ services:
     - default
 
   bloodhound:
-    image: docker.io/specterops/bloodhound:latest
-    pull_policy: always
-    environment:
-      bhe_neo4j_connection: neo4j://neo4j:@neo4j:7687/
-      bhe_database_connection: host=postgres user=postgres password= dbname=postgres
-      bhe_graph_query_memory_limit: '4'
-      bhe_disable_cypher_complexity_limit: 'true'
-      bhe_enable_cypher_mutations: 'true'
+    image: docker.io/specterops/bloodhound:7.4.1
     ports:
     - 127.0.0.1:7575:8080
     volumes:
@@ -67,3 +60,4 @@ volumes:
 
 networks:
   default:
+    internal: true

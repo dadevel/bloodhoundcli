@@ -6,7 +6,7 @@ Collection of various utilities to aid in Pentesting with [BloodHound](https://g
 
 # Setup
 
-1. Install [Podman](https://github.com/containers/podman/) and [docker-compose](https://github.com/docker/compose).
+1. Install [Podman](https://github.com/containers/podman) and [docker-compose](https://github.com/docker/compose).
 2. [Configure rootless containers](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) for Podman.
 3. Enable the Podman socket for your user.
 
@@ -51,21 +51,17 @@ bloodhoundcli destroy-project example2
 
 - BloodHound Legacy: <bolt://localhost:7687/>, username *neo4j*, empty password
 - Neo4j: <http://localhost:7474/>, username *neo4j*, empty password
-- BloodHound Community Edition: <http://localhost:7575/>, username *admin@bloodhound*, empty password
+- BloodHound Community Edition: <http://localhost:7575/>, username *admin*, empty password
 
 ## Data Collection
 
-Data sources:
-
-- [SharpHound](https://github.com/bloodhoundad/sharphound): can be imported with bloodhoundcli
-- [AzureHound](https://github.com/bloodhoundad/azurehound): can be imported with bloodhoundcli
-- [bloodhound.py](https://github.com/dirkjanm/bloodhound.py): must be imported via Legacy BloodHound
-
-Ingest files from AzureHound and SharpHound.
+Ingest files from [AzureHound](https://github.com/SpecterOps/AzureHound) and modern [SharpHound](https://github.com/bloodhoundad/sharphound).
 
 ~~~ bash
 bloodhoundcli import-bhce ./azurehound.json ./*_BloodHound.zip
 ~~~
+
+Files from [bloodhound.py](https://github.com/dirkjanm/bloodhound.py) and old SharpHound must be imported with BloodHound Legacy.
 
 ## CLI Integration
 

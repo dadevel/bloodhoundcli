@@ -11,7 +11,7 @@ import click
 from bloodhoundcli import data as resources  # type: ignore
 
 BLOODHOUND_URL = os.environ.get('BLOODHOUND_URL') or 'http://localhost:7575'
-BLOODHOUND_USERNAME = os.environ.get('BLOODHOUND_USERNAME') or 'admin@bloodhound'
+BLOODHOUND_USERNAME = os.environ.get('BLOODHOUND_USERNAME') or 'admin'
 BLOODHOUND_PASSWORD = os.environ.get('BLOODHOUND_PASSWORD') or ''
 
 
