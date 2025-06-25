@@ -16,6 +16,7 @@ NEO4J_URL = os.environ.get('NEO4J_URL') or 'http://localhost:7474'
 NEO4J_USERNAME = os.environ.get('NEO4J_USERNAME') or 'neo4j'
 NEO4J_PASSWORD = os.environ.get('NEO4J_PASSWORD') or ''
 WORD_SEPARATOR_PATTERN = re.compile(r'[^a-zA-Z0-9]')
+EDGE_TYPE_PATTERN = re.compile('^[a-zA-z_]+$')
 
 
 class Database:
@@ -80,7 +81,7 @@ class Database:
 
     def assign_weights(self) -> None:
         for edge_type in self.execute('MATCH ()-[r]->() RETURN DISTINCT type(r)'):
-            assert edge_type.isalnum()
+            assert EDGE_TYPE_PATTERN.fullmatch(edge_type)
             weight = self.EDGE_WEIGHTS.get(edge_type)
             if weight is None:
                 print(f'using default weight for {edge_type} edges')
