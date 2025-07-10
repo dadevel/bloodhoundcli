@@ -950,13 +950,24 @@
       ]
     },
     {
+      "name": "Tag low-value groups",
+      "category": "AD Post Processing",
+      "enrich": true,
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (g:Group) WHERE any(s IN ['-S-1-1-0', '-S-1-5-11', '-513', '-515'] WHERE g.objectid ENDS WITH s) SET g.lowvalue=true RETURN g"
+        }
+      ]
+    },
+    {
       "name": "Tag members of T0 groups (5 hops)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {tier: 0}) WHERE x:Group OR x:User OR x:Computer SET x.tier=0, x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['T0Member']) RETURN p"
+          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {tier: 0}) WHERE (x:Group OR x:User OR x:Computer) AND NOT coalesce(x.lowvalue, false) SET x.tier=0, x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['T0Member']) RETURN p"
         }
       ]
     },
@@ -967,7 +978,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {highvalue: true}) WHERE x:Group OR x:User OR x:Computer SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['HVTMember']) RETURN p"
+          "query": "MATCH p = (x)-[:MemberOf*1..5]->(y:Group {highvalue: true}) WHERE (x:Group OR x:User OR x:Computer) AND NOT coalesce(x.lowvalue, false) SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['HVTMember']) RETURN p"
         }
       ]
     },
@@ -1000,7 +1011,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[]->(y {tier: 0}) WHERE coalesce(x.tier,2)<>0 SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['T0Path']) RETURN p"
+          "query": "MATCH p = (x)-[]->(y {tier: 0}) WHERE coalesce(x.tier,2)<>0 AND NOT coalesce(x.lowvalue, false) SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['T0Path']) RETURN p"
         }
       ]
     },
@@ -1011,7 +1022,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[]->(y {highvalue: true}) WHERE coalesce(x.tier,2)<>0 SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['HVTPath']) RETURN p"
+          "query": "MATCH p = (x)-[]->(y {highvalue: true}) WHERE coalesce(x.tier,2)<>0 AND NOT coalesce(x.lowvalue, false) SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['HVTPath']) RETURN p"
         }
       ]
     },
@@ -1055,7 +1066,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[r]->(:CertificateTemplate {Enabled: true, `Client Authentication`: true, `Enrollee Supplies Subject`: true, `Requires Manager Approval`: false})-[:EnabledBy]->(:CA) WHERE (((x:User OR x:Computer) AND x.enabled) OR x:Group) AND (r:Enroll OR r:AutoEnroll) SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['ESC1']) RETURN p"
+          "query": "MATCH p = (x)-[r]->(:CertificateTemplate {Enabled: true, `Client Authentication`: true, `Enrollee Supplies Subject`: true, `Requires Manager Approval`: false})-[:EnabledBy]->(:CA) WHERE (((x:User OR x:Computer) AND x.enabled) OR x:Group) AND (r:Enroll OR r:AutoEnroll) AND NOT coalesce(x.lowvalue, false) SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['ESC1']) RETURN p"
         }
       ]
     },
@@ -1066,7 +1077,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (x)-[r]->(:CertificateTemplate {Enabled: true})-[:EnabledBy]->(:CA) WHERE (((x:User OR x:Computer) AND x.enabled) OR x:Group) AND (r:GenericAll OR r:GenericWrite OR r:Owns OR r:WriteDacl OR r:WriteOwner) SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['ESC4']) RETURN p"
+          "query": "MATCH p = (x)-[r]->(:CertificateTemplate {Enabled: true})-[:EnabledBy]->(:CA) WHERE (((x:User OR x:Computer) AND x.enabled) OR x:Group) AND (r:GenericAll OR r:GenericWrite OR r:Owns OR r:WriteDacl OR r:WriteOwner) AND NOT coalesce(x.lowvalue, false) SET x.highvalue=true, x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['ESC4']) RETURN p"
         }
       ]
     },
