@@ -86,7 +86,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {tier: 0}) RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(u:User {enabled: true}) WHERE u.tier=0 OR u.tier=1 OR 'AdminAccount' in u.reason RETURN p"
         }
       ]
     },
@@ -116,7 +116,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Computer)-[:HasSession]->(:User {highvalue: true}) RETURN p"
+          "query": "MATCH p = (:Computer)-[:HasSession]->(:User {tier: 0}) RETURN p UNION MATCH p = (:Computer)-[:HasSession]->(:User)-[:HasAdminAccount]->(:User {tier: 0}) RETURN p"
         }
       ]
     },
@@ -136,7 +136,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Computer)-[:HasSession]->(:User {highvalue: true}) RETURN p"
+          "query": "MATCH p = (:Computer)-[:HasSession]->(:User {highvalue: true}) RETURN p UNION MATCH p = (:Computer)-[:HasSession]->(:User)-[:HasAdminAccount]->(:User {highvalue: true}) RETURN p"
         }
       ]
     },
@@ -171,16 +171,6 @@
       ]
     },
     {
-      "name": "Members of protected users (5 hops)",
-      "category": "Admin Hunt",
-      "queryList": [
-        {
-          "final": true,
-          "query": "MATCH p = (:User {enabled: true})-[:MemberOf*1..5]->(g:Group) WHERE g.objectid ENDS WITH '-525' RETURN p"
-        }
-      ]
-    },
-    {
       "name": "Potential admins by admincount attribute (3 hops)",
       "category": "Admin Hunt",
       "queryList": [
@@ -196,7 +186,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (u:User {enabled: true})-[:MemberOf*1..3]->(g:Group) WHERE (NOT u.highvalue AND toUpper(u.name) CONTAINS 'ADM') OR (NOT g.highvalue AND toUpper(g.name) CONTAINS 'ADM') RETURN p"
+          "query": "MATCH p = (u:User {enabled: true})-[:MemberOf*1..3]->(g:Group) WHERE (NOT u.highvalue AND tolower(u.name) CONTAINS 'adm') OR (NOT g.highvalue AND tolower(g.name) CONTAINS 'adm') RETURN p"
         }
       ]
     },
@@ -851,7 +841,7 @@
       ]
     },
     {
-      "name": "Mark active and inactive accounts (no output)",
+      "name": "Mark active and inactive accounts (automated, no output)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -862,7 +852,7 @@
       ]
     },
     {
-      "name": "Mark protected users as senstive",
+      "name": "Mark protected users as senstive (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -873,7 +863,7 @@
       ]
     },
     {
-      "name": "Connect objects with constrained delegation",
+      "name": "Connect objects with constrained delegation (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -884,7 +874,7 @@
       ]
     },
     {
-      "name": "Connect service accounts to computers where they might be running",
+      "name": "Connect service accounts to computers where they might be running (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -895,7 +885,7 @@
       ]
     },
     {
-      "name": "Add reverse sessions (no output)",
+      "name": "Add reverse sessions (automated, no output)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -906,7 +896,18 @@
       ]
     },
     {
-      "name": "Tag T0 objects",
+      "name": "Connect admins with their unprivileged accounts (manual, template)",
+      "category": "AD Post Processing",
+      "enrich": true,
+      "queryList": [
+        {
+          "final": true,
+          "query": "WITH '-adm' AS z MATCH (x:User) WHERE tolower(x.samaccountname) CONTAINS z MATCH (y:User) WHERE tolower(y.samaccountname)=replace(tolower(x.samaccountname), z, '') MERGE p = (y)-[:HasAdminAccount]->(x) SET y.highvalue=true, x.highvalue=true, y.reason=apoc.coll.toSet(coalesce(y.reason,[])+['RelatedAdminAccount']), x.reason=apoc.coll.toSet(coalesce(x.reason,[])+['AdminAccount']) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Tag T0 objects (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -917,7 +918,7 @@
       ]
     },
     {
-      "name": "Tag MSOL accounts",
+      "name": "Tag MSOL accounts (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -928,7 +929,7 @@
       ]
     },
     {
-      "name": "Tag T0 groups",
+      "name": "Tag T0 groups (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -939,7 +940,7 @@
       ]
     },
     {
-      "name": "Tag valueable groups",
+      "name": "Tag valueable groups (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -950,7 +951,7 @@
       ]
     },
     {
-      "name": "Tag low-value groups",
+      "name": "Tag low-value groups (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -961,7 +962,7 @@
       ]
     },
     {
-      "name": "Tag members of T0 groups (5 hops)",
+      "name": "Tag members of T0 groups (automated, 5 hops)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -972,7 +973,7 @@
       ]
     },
     {
-      "name": "Tag members of valueable groups (5 hops)",
+      "name": "Tag members of valueable groups (automated, 5 hops)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -983,7 +984,7 @@
       ]
     },
     {
-      "name": "Tag OUs containing T0 objects",
+      "name": "Tag OUs containing T0 objects (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -994,7 +995,7 @@
       ]
     },
     {
-      "name": "Tag OUs containing valueable objects",
+      "name": "Tag OUs containing valueable objects (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -1005,7 +1006,7 @@
       ]
     },
     {
-      "name": "Mark objects with direct paths to T0",
+      "name": "Mark objects with direct paths to T0 (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -1016,7 +1017,7 @@
       ]
     },
     {
-      "name": "Mark objects with direct paths to valuable objects",
+      "name": "Mark objects with direct paths to valuable objects (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -1027,7 +1028,7 @@
       ]
     },
     {
-      "name": "Mark active computers without LAPS as valuable",
+      "name": "Mark active computers without LAPS as valuable (manual)",
       "category": "AD Post Processing",
       "enrich": false,
       "queryList": [
@@ -1038,7 +1039,7 @@
       ]
     },
     {
-      "name": "Mark computers with sessions of T0 users",
+      "name": "Mark computers with sessions of T0 users (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -1049,7 +1050,7 @@
       ]
     },
     {
-      "name": "Mark computers with sessions of valuable users",
+      "name": "Mark computers with sessions of valuable users (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -1060,7 +1061,7 @@
       ]
     },
     {
-      "name": "Mark accounts with ESC1",
+      "name": "Mark accounts with ESC1 (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -1071,7 +1072,7 @@
       ]
     },
     {
-      "name": "Mark accounts with ESC4",
+      "name": "Mark accounts with ESC4 (automated)",
       "category": "AD Post Processing",
       "enrich": true,
       "queryList": [
@@ -1082,7 +1083,7 @@
       ]
     },
     {
-      "name": "Reset tiering tags (no output)",
+      "name": "Reset tiering tags (manual, no output)",
       "category": "AD Post Processing",
       "queryList": [
         {
@@ -1092,7 +1093,7 @@
       ]
     },
     {
-      "name": "Reset activity tags (no output)",
+      "name": "Reset activity tags (manual, no output)",
       "category": "AD Post Processing",
       "queryList": [
         {
@@ -1618,6 +1619,16 @@
         {
           "final": true,
           "query": "MATCH p = (a:Credential)-[:AssignedTo]->(b:Computer {enabled: true}) WHERE a.password=toLower(left(replace(b.samaccountname, '$', ''), 14)) SET a.weak=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "NetApp storage systems",
+      "category": "Service Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE tolower(c.operatingsystem) STARTS WITH 'ontap' RETURN p"
         }
       ]
     },
