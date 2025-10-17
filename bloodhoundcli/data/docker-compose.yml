@@ -41,7 +41,7 @@ services:
     - default
 
   bloodhound:
-    image: docker.io/specterops/bloodhound:7.4.1
+    image: docker.io/specterops/bloodhound:latest
     ports:
     - 127.0.0.1:7575:8080
     volumes:

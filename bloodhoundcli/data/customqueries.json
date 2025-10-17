@@ -246,7 +246,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Any Purpose`: true, `Requires Manager Approval`: false})-[:EnabledBy]->(:CA) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
+          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Any Purpose`: true, `Requires Manager Approval`: false, `Authorized Signatures Required`: 0})-[:EnabledBy]->(:CA) WHERE coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
         }
       ]
     },
@@ -676,7 +676,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT toUpper(c.operatingsystem) STARTS WITH 'WINDOWS' AND NOT c.operatingsystem STARTS WITH 'Mac OS X' AND c.operatingsystem<>'macOS' AND NOT c.operatingsystem STARTS WITH 'NetApp' AND c.operatingsystem<>'OnTap' AND c.operatingsystem<>'Cisco Identity Services Engine' RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT toUpper(c.operatingsystem) STARTS WITH 'WINDOWS' AND NOT c.operatingsystem STARTS WITH 'Mac OS X' AND c.operatingsystem<>'macOS' AND NOT c.operatingsystem STARTS WITH 'NetApp' AND c.operatingsystem<>'OnTap' AND c.operatingsystem<>'Cisco Identity Services Engine' AND NOT c.operatingsystem<>'unknown Likewise Open unknown.unknown.unknown' RETURN p"
         }
       ]
     },
@@ -1006,9 +1006,9 @@
       ]
     },
     {
-      "name": "Mark objects with direct paths to T0 (automated)",
+      "name": "Mark objects with direct paths to T0 (manual)",
       "category": "AD Post Processing",
-      "enrich": true,
+      "enrich": false,
       "queryList": [
         {
           "final": true,
@@ -1017,9 +1017,9 @@
       ]
     },
     {
-      "name": "Mark objects with direct paths to valuable objects (automated)",
+      "name": "Mark objects with direct paths to valuable objects (manual)",
       "category": "AD Post Processing",
-      "enrich": true,
+      "enrich": false,
       "queryList": [
         {
           "final": true,
@@ -1623,6 +1623,16 @@
       ]
     },
     {
+      "name": "VMware virtualization systems",
+      "category": "Service Discovery",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE tolower(c.operatingsystem) STARTS WITH 'unknown likewise open unknown' RETURN p"
+        }
+      ]
+    },
+    {
       "name": "NetApp storage systems",
       "category": "Service Discovery",
       "queryList": [
@@ -1968,7 +1978,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[:AZOwns|AZUserAccessAdministrator]->(s:AZSubscription) SET n.tier=0, n.highvalue=true, s.highvalue=true RETURN p"
+          "query": "MATCH p = (n)-[:AZOwner|AZOwns|AZUserAccessAdministrator]->(s:AZSubscription) SET n.tier=0, n.highvalue=true, s.highvalue=true RETURN p"
         }
       ]
     },
@@ -2008,7 +2018,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (a)-[:AZOwns]->(:AZApp {tier: 0}) SET a.tier=0, a.highvalue=true RETURN p"
+          "query": "MATCH p = (a)-[:AZOwner|AZOwns]->(:AZApp {tier: 0}) SET a.tier=0, a.highvalue=true RETURN p"
         }
       ]
     },
@@ -2018,7 +2028,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (a)-[:AZOwns]->(:AZApp {highvalue: true}) SET a.highvalue=true RETURN p"
+          "query": "MATCH p = (a)-[:AZOwner|AZOwns]->(:AZApp {highvalue: true}) SET a.highvalue=true RETURN p"
         }
       ]
     },
@@ -2028,7 +2038,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[:AZOwns]->(:AZApp) SET n.highvalue=true RETURN p"
+          "query": "MATCH p = (n)-[:AZOwner|AZOwns]->(:AZApp) SET n.highvalue=true RETURN p"
         }
       ]
     },
@@ -2048,7 +2058,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:AZTenant)-[:AZContains*1..]->({tier: 0}) RETURN p UNION MATCH (p {tier: 0}) RETURN p"
+          "query": "MATCH p = (:AZTenant)-[:AZContains*1..]->({tier: 0}) RETURN p"
         }
       ]
     },
@@ -2148,7 +2158,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (n)-[:AZOwns]->(:AZGroup) RETURN p"
+          "query": "MATCH p = (n)-[:AZOwner|AZOwns]->(:AZGroup) RETURN p"
         }
       ]
     },
@@ -2188,7 +2198,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = ()-[:AZAddOwner|AZAddSecret|AZAppAdmin|AZCloudAppAdmin|AZMGAddOwner|AZMGAddSecret|AZOwns]->(:AZServicePrincipal {appdisplayname: 'Microsoft Graph'}) RETURN p"
+          "query": "MATCH p = ()-[:AZAddOwner|AZAddSecret|AZAppAdmin|AZCloudAppAdmin|AZMGAddOwner|AZMGAddSecret|AZOwner|AZOwns]->(:AZServicePrincipal {appdisplayname: 'Microsoft Graph'}) RETURN p"
         }
       ]
     },
