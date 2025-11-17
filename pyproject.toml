@@ -12,7 +12,7 @@ bloodhoundcli = "bloodhoundcli.main:main"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-click = "^8.3.0"
+click = "^8.3.1"
 requests = "^2.32.5"
 
 [build-system]
