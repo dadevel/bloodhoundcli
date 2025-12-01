@@ -351,6 +351,26 @@
       ]
     },
     {
+      "name": "Direct paths to ESC1 templates for server authentication excluding T0",
+      "category": "ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true, `Enrollee Supplies Subject`: true, `Requires Manager Approval`: false})-[:EnabledBy]->(:CA) WHERE 'Server Authentication' IN t.`Extended Key Usage` AND coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Direct paths to templates with server authentication excluding T0",
+      "category": "ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (o)-[r]->(t:CertificateTemplate {Enabled: true})-[:EnabledBy]->(:CA) WHERE 'Server Authentication' IN t.`Extended Key Usage` AND coalesce(o.tier, 2)<>0 AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) AND (r:Enroll OR r:AutoEnroll) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Paths from standard groups to valueable targets (3 hops)",
       "category": "Escalation",
       "queryList": [
@@ -2259,6 +2279,26 @@
         {
           "final": true,
           "query": "MATCH p = (u:AZUser {enabled: true, onpremsyncenabled: true})-[:AZHasRole|AZMemberOf*1..10]->(r:AZRole {highvalue: true}) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Valueable Entra users synced with AD (10 hops)",
+      "category": "Azure Synchronization",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a:AZUser {highvalue: true})-[:SyncedToADUser]->(b:User) RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Valueable AD users synced with Entra (10 hops)",
+      "category": "Azure Synchronization",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (a:User {highvalue: true})-[:SyncedToEntraUser]->(b:AZUser) RETURN p"
         }
       ]
     },
