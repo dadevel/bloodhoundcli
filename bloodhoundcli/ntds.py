@@ -11,6 +11,7 @@ from bloodhoundcli.neo4j import Database
 DOMAIN_PATTERN = re.compile(r'^(?:(?:[a-z0-9-]+)\.)+(?:[a-z0-9-]+)$')
 EMPTY_LMHASH = 'aad3b435b51404eeaad3b435b51404ee'
 DISABLED_NTHASH = '31d6cfe0d16ae931b73c59d7e0c089c0'
+USERNAME_HISTORY_PATTERN = re.compile(r'^.+_history[0-9]+$')
 
 
 @click.command(help='Import hashes and cracked passwords from DCSync')
@@ -166,6 +167,11 @@ def parse_ntds(file: TextIO) -> dict[str, NtdsEntry]:
             print(f'{file.name}:{linenum}: invalid line: {line}', file=sys.stderr)
             continue
         new_entry = match.groupdict()
+
+        # ignore history entry
+        if USERNAME_HISTORY_PATTERN.match(new_entry['longname']):
+            continue
+
         old_entry = result.get(new_entry['longname'])
         # this logic is necessary because in some weird scenarios the samaccountname is not unique
         # see https://github.com/dadevel/bloodhoundcli/issues/9
