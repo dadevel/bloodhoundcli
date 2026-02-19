@@ -226,7 +226,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = shortestPath((o)-[r]->(t:CA)) WHERE o<>t AND none(e IN r WHERE e:Enroll OR e:Read OR e:EnabledBy) AND coalesce(o.tier, 2)<>0 RETURN p UNION MATCH p = shortestPath((o)-[r]->(t:CertificateTemplate)) WHERE o<>t AND coalesce(o.tier, 2)<>0 AND none(e IN r WHERE e:Enroll OR e:AutoEnroll) AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) RETURN p"
+          "query": "MATCH p = (o)-[r]->(t:CA) WHERE o<>t AND NOT r:Enroll AND NOT r:Read AND NOT r:EnabledBy AND NOT r:WriteProperty AND coalesce(o.tier, 2)<>0 RETURN p UNION MATCH p = (o)-[r]->(t:CertificateTemplate) WHERE o<>t AND coalesce(o.tier, 2)<>0 AND NOT r:Enroll AND NOT r:AutoEnroll AND NOT r:WriteProperty AND (((o:User OR o:Computer) AND o.enabled) OR o:Group) RETURN p"
         }
       ]
     },
@@ -1133,7 +1133,7 @@
       ]
     },
     {
-      "name": "Generic tiering violations (5 hops)",
+      "name": "Generic tiering violations",
       "category": "AD Tiering",
       "queryList": [
         {
@@ -1198,7 +1198,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS' AND NOT toUpper(c.operatingsystem) CONTAINS 'SERVER' RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND c.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS' AND NOT toUpper(c.operatingsystem) CONTAINS 'SERVER' RETURN p"
         }
       ]
     },
@@ -1208,7 +1208,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS SERVER' RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE o.tier IS NULL AND c.tier IS NULL AND toUpper(c.operatingsystem) CONTAINS 'WINDOWS SERVER' RETURN p"
         }
       ]
     },
@@ -1218,7 +1218,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU) MATCH (o)-[:Contains*1..]->(:User {enabled: true}) WHERE o.tier IS NULL RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(o:OU)-[:Contains*1..]->(u:User {enabled: true}) WHERE o.tier IS NULL AND u.tier IS NULL RETURN p"
         }
       ]
     },
