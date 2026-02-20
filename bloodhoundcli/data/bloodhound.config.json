@@ -20,12 +20,13 @@
   },
   "default_admin": {
     "principal_name": "admin",
-    "password": "",
+    "password": "admin",
     "expire_now": false
   },
+  "recreate_default_admin": false,
   "enable_cypher_mutations": true,
   "disable_cypher_complexity_limit": true,
   "graph_query_memory_limit": 4,
   "enable_text_logger": true,
-  "recreatedefaultadmin": false
+  "enable_user_analytics": false
 }

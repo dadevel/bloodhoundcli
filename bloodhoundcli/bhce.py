@@ -12,7 +12,7 @@ from bloodhoundcli import data as resources  # type: ignore
 
 BLOODHOUND_URL = os.environ.get('BLOODHOUND_URL') or 'http://localhost:7575'
 BLOODHOUND_USERNAME = os.environ.get('BLOODHOUND_USERNAME') or 'admin'
-BLOODHOUND_PASSWORD = os.environ.get('BLOODHOUND_PASSWORD') or ''
+BLOODHOUND_PASSWORD = os.environ.get('BLOODHOUND_PASSWORD') or 'admin'
 
 
 def wait_until_up() -> None:
