@@ -311,6 +311,16 @@
       ]
     },
     {
+      "name": "Potential non-CA servers with web enrollment",
+      "category": "ADCS",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH (a:CA) MATCH p=(:Computer {enabled: true})-[:AllowedToDelegate]->(b:Computer {enabled: true}) WHERE toupper(b.name)=toupper(a.`DNS Name`) RETURN p"
+        }
+      ]
+    },
+    {
       "name": "Direct paths to ESC9 templates",
       "category": "ADCS",
       "queryList": [
@@ -1958,7 +1968,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Administrator|Cloud Application Administrator|Directory Synchronization Accounts|Domain Name Administrator|External Identity Provider Administrator|Global Administrator|Hybrid Identity Administrator|Intune Administrator|Partner Tier1 Support|Partner Tier2 Support|Privileged Authentication Administrator|Privileged Role Administrator|Security Administrator|User Administrator' SET r.tier=0, r.highvalue=true RETURN r"
+          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Administrator|Application Developer|Cloud Application Administrator|Conditional Access Administrator|Directory Synchronization Accounts|Domain Name Administrator|External Identity Provider Administrator|Global Administrator|Hybrid Identity Administrator|Intune Administrator|Partner Tier2 Support|Privileged Authentication Administrator|Privileged Role Administrator|Security Administrator' SET r.tier=0, r.highvalue=true RETURN r"
         }
       ]
     },
@@ -1968,7 +1978,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)Application Developer|Attribute Assignment Administrator|Attribute Assignment Reader|Attribute Definition Administrator|Attribute Definition Reader|Attribute Log Administrator|Authentication Administrator|Authentication Extensibility Administrator|Authentication Policy Administrator|Azure DevOps Administrator|B2C IEF Keyset Administrator|B2C IEF Policy Administrator|Billing Administrator|Cloud App Security Administrator|Cloud Device Administrator|Compliance Data Administrator|Conditional Access Administrator|Device Managers|Directory Writers|Exchange Administrator|Extended Directory User Administrator|External ID User Flow Administrator|External ID User Flow Attribute Administrator|Global Reader|Global Secure Access Administrator|Groups Administrator|Helpdesk Administrator|Identity Governance Administrator|Knowledge Administrator|Knowledge Manager|License Administrator|Lifecycle Workflows Administrator|Microsoft Entra Joined Device Local Administrator|Organizational Branding Administrator|Partner Tier1 Support|Password Administrator|Permissions Management Administrator|Security Operator|Security Reader|SharePoint Administrator|Teams Administrator|Windows 365 Administrator|Windows Update Deployment Administrator|Yammer Administrator' SET r.highvalue=true RETURN r"
+          "query": "MATCH (r:AZRole) WHERE r.displayname =~ '(?i)AI Administrator|Attribute Assignment Administrator|Attribute Assignment Reader|Attribute Definition Administrator|Attribute Definition Reader|Attribute Log Administrator|Attribute Provisioning Administrator|Attribute Provisioning Reader|Authentication Administrator|Authentication Extensibility Administrator|Authentication Policy Administrator|Azure DevOps Administrator|Azure Information Protection Administrator|B2C IEF Keyset Administrator|B2C IEF Policy Administrator|Billing Administrator|Cloud App Security Administrator|Cloud Device Administrator|Compliance Administrator|Compliance Data Administrator|Customer Lockbox Access Approver|Device Managers|Directory Synchronization Accounts|Directory Writers|Dynamics 365 Administrator|Exchange Administrator|Exchange Recipient Administrator|Extended Directory User Administrator|External ID User Flow Administrator|External ID User Flow Attribute Administrator|Global Reader|Global Secure Access Administrator|Groups Administrator|Helpdesk Administrator|Identity Governance Administrator|Knowledge Administrator|Knowledge Manager|License Administrator|Lifecycle Workflows Administrator|Microsoft 365 Backup Administrator|Microsoft 365 Migration Administrator|Microsoft Entra Joined Device Local Administrator|On Premises Directory Sync Account|Organizational Branding Administrator|Partner Tier1 Support|Password Administrator|Permissions Management Administrator|Power Platform Administrator|Security Operator|Security Reader|Security Reader*|SharePoint Administrator|Skype for Business Administrator|Teams Administrator|Teams Communications Administrator|Teams Communications Support Engineer|Teams Telephony Administrator|User Administrator|Windows 365 Administrator|Windows Update Deployment Administrator|Yammer Administrator' SET r.highvalue=true RETURN r"
         }
       ]
     },
