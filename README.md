@@ -14,9 +14,10 @@ Collection of various utilities to aid in Pentesting with [BloodHound](https://g
     systemctl --user enable --now podman.socket
     ~~~
 
-3. Install this Python package with [pipx](https://github.com/pypa/pipx).
+3. Install this Python package with [uv](https://github.com/astral-sh/uv/) or [pipx](https://github.com/pypa/pipx).
 
     ~~~ bash
+    uv tool install git+https://github.com/dadevel/bloodhoundcli.git@main
     pipx install git+https://github.com/dadevel/bloodhoundcli.git@main
     ~~~
 
