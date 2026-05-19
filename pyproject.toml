@@ -1,20 +1,22 @@
-[tool.poetry]
+[project]
 name = "bloodhoundcli"
-version = "0.1.32"
+version = "0.1.33"
 description = ""
-authors = ["dadevel <dadevel@disroot.org>"]
+authors = [{name = "dadevel",email = "dadevel@disroot.org"}]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "bloodhoundcli"}]
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.4.0",
+    "requests>=2.34.2",
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 bloodhoundcli = "bloodhoundcli.main:main"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-click = "^8.3.2"
-requests = "^2.33.1"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.11.18,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+source-include = ["src/bloodhoundcli/data/**"]

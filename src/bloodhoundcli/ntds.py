@@ -8,7 +8,6 @@ import click
 from bloodhoundcli.hashcat import decode_password
 from bloodhoundcli.neo4j import Database
 
-DOMAIN_PATTERN = re.compile(r'^(?:(?:[a-z0-9-]+)\.)+(?:[a-z0-9-]+)$')
 EMPTY_LMHASH = 'aad3b435b51404eeaad3b435b51404ee'
 DISABLED_NTHASH = '31d6cfe0d16ae931b73c59d7e0c089c0'
 USERNAME_HISTORY_PATTERN = re.compile(r'^.+_history[0-9]+$')
@@ -34,8 +33,9 @@ def import_ntds(ntds: list[Path], potfile: Path) -> None:
             print(f'warning: skipping {path} with unknown file format')
 
         domain = path.name.removesuffix('.ntds')
-        if not DOMAIN_PATTERN.fullmatch(domain):
-            raise RuntimeError(f'{path} does not follow the expected naming scheme, a DCSync from the corp.local domain should be named corp.local.ntds')
+
+        if not neo4j.execute('MATCH (d:Domain {name: $domain}) RETURN d', domain=domain.upper()):
+            print(f"warning: unable to map credentials to users, {domain!r} does not exist in BloodHound database, a DCSync from the domain 'corp.local' must be stored in a file named 'corp.local.ntds'")
 
         with open(path, 'r') as file:
             ntdsdb = parse_ntds(file)
