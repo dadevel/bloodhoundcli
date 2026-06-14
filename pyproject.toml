@@ -1,6 +1,6 @@
 [project]
 name = "bloodhoundcli"
-version = "0.1.33"
+version = "0.1.34"
 description = ""
 authors = [{name = "dadevel",email = "dadevel@disroot.org"}]
 license = "MIT"
