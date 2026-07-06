@@ -771,7 +771,7 @@
       ]
     },
     {
-      "name": "MSSQL servers",
+      "name": "MSSQL and failover cluster servers",
       "category": "MSSQL",
       "queryList": [
         {
@@ -1719,6 +1719,16 @@
         {
           "final": true,
           "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE any(s IN c.serviceprincipalnames WHERE s =~ '^(?i)Veeam(AgentWindows|CatalogSvc|DeploySvc|DistributionSvc|EnterpriseManagerSvc|FilesysVssSvc|GuestHelperSvc|LogShipperSvc|MountSvc|NfsSvc|TapeSvc|TransportSvc)/.*?') SET c.wellknownspn=true RETURN p"
+        }
+      ]
+    },
+    {
+      "name": "Microsoft failover cluster servers",
+      "category": "MSSQL",
+      "queryList": [
+        {
+          "final": true,
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c {enabled: true}) WHERE (c:User OR c:Computer) AND any(x IN c.serviceprincipalnames WHERE x STARTS WITH x STARTS WITH 'MSServerCluster/' OR x STARTS WITH 'MSClusterVirtualServer/' OR x STARTS WITH 'MSServerClusterMgmtAPI/') SET c.wellknownspn=true RETURN p"
         }
       ]
     },
