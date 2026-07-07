@@ -706,7 +706,7 @@
       "queryList": [
         {
           "final": true,
-          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT toUpper(c.operatingsystem) STARTS WITH 'WINDOWS' AND NOT c.operatingsystem STARTS WITH 'Mac OS X' AND c.operatingsystem<>'macOS' AND NOT c.operatingsystem STARTS WITH 'NetApp' AND c.operatingsystem<>'OnTap' AND c.operatingsystem<>'Cisco Identity Services Engine' AND NOT c.operatingsystem<>'unknown Likewise Open unknown.unknown.unknown' RETURN p"
+          "query": "MATCH p = (:Domain)-[:Contains*1..]->(c:Computer {enabled: true}) WHERE NOT toUpper(c.operatingsystem) STARTS WITH 'WINDOWS' AND NOT c.operatingsystem STARTS WITH 'Mac OS X' AND c.operatingsystem<>'macOS' AND NOT c.operatingsystem STARTS WITH 'NetApp' AND c.operatingsystem<>'OnTap' AND c.operatingsystem<>'Cisco Identity Services Engine' AND c.operatingsystem<>'unknown Likewise Open unknown.unknown.unknown' RETURN p"
         }
       ]
     },
