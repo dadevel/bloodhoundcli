@@ -27,7 +27,7 @@ If you don't want to use BloodHoundCli and are here just for the [custom queries
 Otherwise the queries are automatically installed when you create your first BloodHoundCli project.
 
 ~~~ bash
-curl -Lo ~/.config/bloodhound/customqueries.json https://github.com/dadevel/bloodhoundcli/raw/main/bloodhoundcli/data/customqueries.json
+curl -Lo ~/.config/bloodhound/customqueries.json https://github.com/dadevel/bloodhoundcli/raw/main/src/bloodhoundcli/data/customqueries.json
 ~~~
 
 The queries are based on work by [@luemmelsec](https://github.com/LuemmelSec/Custom-BloodHound-Queries) and [@martinsohn](https://gist.github.com/martinsohn/3f6122c7486ca3ffcaa444772f1a35f2).
